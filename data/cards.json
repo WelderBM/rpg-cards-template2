@@ -1,0 +1,30 @@
+[
+  {
+    "id": "espada-longa",
+    "tipo": "arma",
+    "titulo": "Espada Longa",
+    "subtitulo": "Arma Marcial",
+    "preco": "T$75",
+    "descricao": "Uma lâmina reta e equilibrada, forjada nas oficinas de Valkaria. Corte confiável em qualquer duelo.",
+    "atributos": [
+      { "valor": "1d8" },
+      { "valor": "1.5kg" },
+      { "valor": "T$75" }
+    ],
+    "imagem": "assets/art/espada-longa.png"
+  },
+  {
+    "id": "pocao-cura",
+    "tipo": "pocao",
+    "titulo": "Poção de Cura",
+    "subtitulo": "Alquimia",
+    "preco": "T$30",
+    "descricao": "Um líquido vermelho vivo que borbulha suavemente. Restaura 5d8 pontos de vida ao ser ingerido.",
+    "atributos": [
+      { "valor": "5d8 PV" },
+      { "valor": "Instant." },
+      { "valor": "T$30" }
+    ],
+    "imagem": "assets/art/pocao-cura.png"
+  }
+]

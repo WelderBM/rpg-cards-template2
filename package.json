@@ -1,0 +1,22 @@
+{
+  "name": "rpg-cards-renderer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "template": "tsx scripts/template.ts",
+    "build": "tsx scripts/build.ts",
+    "dev": "tsx scripts/dev.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "pdf-lib": "^1.17.1",
+    "playwright": "1.56.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}
