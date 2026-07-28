@@ -95,27 +95,37 @@ export function buildCardHtml(card: Card): string {
   const artUrl = fileUrl(path.join(ROOT_DIR, card.imagem));
   const frameUrl = fileUrl(PATHS.frame);
 
-  const cellWidthPx = Math.floor(footerBox.widthPx / FOOTER_CELL_COUNT);
+  // One flat row: icon + "Rótulo: valor", pairs separated by a plain "|" —
+  // no boxes/dividers, matching the reference (text sits directly on the
+  // parchment, not in bordered cells).
+  // Fixed budget reserved for the two flourish glyphs flanking the subtitle,
+  // so the subtitle's own fit-measurement wrapper has a real (non-shrink-wrap) width.
+  const subtitleFlourishBudgetPx = 40;
+  const subtitleTextWidthPx = titleBox.widthPx - TEXT_SAFE_PADDING_PX * 2 - subtitleFlourishBudgetPx * 2;
+
+  const footerSeparatorPx = 16;
+  const cellWidthPx = Math.floor(
+    (footerBox.widthPx - footerSeparatorPx * (FOOTER_CELL_COUNT - 1)) / FOOTER_CELL_COUNT,
+  );
   const footerIconPx = 22;
   const footerGapPx = 6;
-  const footerVerticalInsetPx = 4;
-  // Fixed (not shrink-to-fit) box for the label+value stack, so the autofit
-  // measurement below has a real ceiling to compare against instead of an
-  // auto-sized parent that would always "fit" its own content.
+  // Fixed (not shrink-to-fit) box for the "Rótulo: valor" text, so the
+  // autofit measurement has a real ceiling instead of an auto-sized parent
+  // that would always "fit" its own content.
   const footerTextWidthPx = cellWidthPx - footerIconPx - footerGapPx - TEXT_SAFE_PADDING_PX * 2;
-  const footerTextHeightPx = footerBox.heightPx - footerVerticalInsetPx * 2;
 
   const footerCells = Array.from({ length: FOOTER_CELL_COUNT }, (_, i) => {
     const attr = resolveFooterAttr(card, i);
     const iconUrl = attr.icone ? fileUrl(path.join(PATHS.icons, attr.icone)) : "";
+    const separator = i < FOOTER_CELL_COUNT - 1 ? `<span class="footer-separator">|</span>` : "";
     return `
       <div class="footer-cell" style="width:${cellWidthPx}px;">
         ${iconUrl ? `<img class="footer-icon" src="${iconUrl}" alt="" />` : ""}
-        <div class="footer-text" style="width:${footerTextWidthPx}px;height:${footerTextHeightPx}px;">
-          <div class="footer-label">${escapeHtml(attr.rotulo)}</div>
-          <div id="footer-value-${i}" class="footer-value" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}">${escapeHtml(attr.valor)}</div>
+        <div class="footer-text-box" style="width:${footerTextWidthPx}px;">
+          <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}">${escapeHtml(attr.rotulo)}: ${escapeHtml(attr.valor)}</div>
         </div>
       </div>
+      ${separator}
     `;
   }).join("\n");
 
@@ -139,6 +149,9 @@ export function buildCardHtml(card: Card): string {
     width: ${artBox.widthPx - ART_SAFE_PADDING_PX * 2}px;
     height: ${artBox.heightPx - ART_SAFE_PADDING_PX * 2}px;
     object-fit: contain;
+    /* Art sits ON TOP of the (fully opaque) frame, so it needs its own drop
+       shadow to read as sitting on the parchment -- matches the reference. */
+    filter: drop-shadow(3px 6px 6px rgba(20, 10, 0, 0.35));
   }
 
   .title-slot {
@@ -147,6 +160,8 @@ export function buildCardHtml(card: Card): string {
     width: ${titleBox.widthPx}px;
     height: ${titleBox.heightPx}px;
     padding: 0 ${TEXT_SAFE_PADDING_PX}px;
+    flex-direction: column;
+    gap: 2px;
   }
   .title-text {
     font-family: "Cinzel", serif;
@@ -156,6 +171,31 @@ export function buildCardHtml(card: Card): string {
     text-align: center;
     color: #2b1a0d;
     letter-spacing: 0.02em;
+  }
+  .subtitle-text {
+    font-family: "Cinzel", serif;
+    font-weight: ${FONTS.subtitulo.weight};
+    font-variation-settings: "wght" ${FONTS.subtitulo.weight};
+    white-space: nowrap;
+    text-align: center;
+    color: #2b1a0d;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .subtitle-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .subtitle-text-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .subtitle-flourish {
+    color: rgba(43, 26, 13, 0.55);
+    flex-shrink: 0;
   }
 
   .price-slot {
@@ -207,47 +247,56 @@ export function buildCardHtml(card: Card): string {
     justify-content: center;
     gap: 6px;
     height: 100%;
-    padding: 0 ${TEXT_SAFE_PADDING_PX}px;
-    border-right: 1px solid rgba(43, 26, 13, 0.35);
   }
-  .footer-cell:last-child { border-right: none; }
   .footer-icon {
     width: 22px;
     height: 22px;
     flex-shrink: 0;
   }
-  .footer-text {
+  .footer-text-box {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    line-height: 1.1;
+    align-items: center;
+    justify-content: flex-start;
     flex-shrink: 0;
   }
-  .footer-label {
+  .footer-pair {
     font-family: "Lora", serif;
-    font-weight: ${FONTS.footerLabel.weight};
-    font-size: ${FONTS.footerLabel.minPx}px;
-    color: #2b1a0d;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-  .footer-value {
-    font-family: "Cinzel", serif;
     font-weight: ${FONTS.footerValue.weight};
     color: #2b1a0d;
     white-space: nowrap;
   }
+  .footer-separator {
+    display: inline-block;
+    width: ${footerSeparatorPx}px;
+    text-align: center;
+    font-family: "Lora", serif;
+    color: rgba(43, 26, 13, 0.4);
+    font-size: 22px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
 </style>
 </head>
 <body>
+  <img class="layer" src="${frameUrl}" alt="" />
   <div class="layer art-layer">
     <img class="art-image" src="${artUrl}" alt="" />
   </div>
-  <img class="layer" src="${frameUrl}" alt="" />
 
   <div class="slot title-slot">
     <div class="title-text" data-autofit="single" data-min="${FONTS.title.minPx}" data-max="${FONTS.title.maxPx}">${escapeHtml(card.titulo)}</div>
+    ${
+      card.subtitulo
+        ? `
+    <div class="subtitle-line">
+      <span class="subtitle-flourish">&#10022;</span>
+      <div class="subtitle-text-box" style="width:${subtitleTextWidthPx}px;">
+        <div id="subtitle-text" class="subtitle-text" data-autofit="single" data-min="${FONTS.subtitulo.minPx}" data-max="${FONTS.subtitulo.maxPx}">${escapeHtml(card.subtitulo)}</div>
+      </div>
+      <span class="subtitle-flourish">&#10022;</span>
+    </div>`
+        : ""
+    }
   </div>
 
   <div class="slot price-slot">

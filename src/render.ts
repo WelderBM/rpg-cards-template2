@@ -188,7 +188,11 @@ async function autofitCard(page: Page, cardId: string): Promise<void> {
   await fitSingleLine(page, ".price-text", cardId, "price");
   await fitMultiLine(page, ".description-text", cardId, "description");
 
-  const footerValueCount = await page.locator(".footer-value").count();
+  if ((await page.locator("#subtitle-text").count()) > 0) {
+    await fitSingleLine(page, "#subtitle-text", cardId, "subtitulo");
+  }
+
+  const footerValueCount = await page.locator(".footer-pair").count();
   for (let i = 0; i < footerValueCount; i++) {
     await fitSingleLine(page, `#footer-value-${i}`, cardId, `footer[${i}].valor`);
   }
