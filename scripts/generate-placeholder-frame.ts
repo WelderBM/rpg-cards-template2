@@ -9,6 +9,7 @@
  */
 import fs from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 import { buildPlaceholderFrameHtml } from "../src/card.html.js";
 import { CANVAS_HEIGHT_PX, CANVAS_WIDTH_PX, PATHS } from "../src/config.js";
@@ -31,7 +32,7 @@ export async function generatePlaceholderFrame(): Promise<string> {
   return PATHS.frame;
 }
 
-const isMain = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
   generatePlaceholderFrame()
     .then((framePath) => {

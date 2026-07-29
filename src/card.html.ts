@@ -4,8 +4,10 @@ import {
   ART_SAFE_PADDING_PX,
   CANVAS_HEIGHT_PX,
   CANVAS_WIDTH_PX,
+  type CoinSide,
   FONTS,
   FOOTER_CELL_COUNT,
+  FRAME_PATHS,
   LINE_HEIGHT,
   PATHS,
   PLACEHOLDER_FRAME,
@@ -14,6 +16,7 @@ import {
   TEXT_SAFE_PADDING_PX,
   TYPE_FOOTER_DEFAULTS,
   boxToPx,
+  getSlotsForSide,
 } from "./config.js";
 import type { Card, CardAttribute } from "./types.js";
 
@@ -85,19 +88,20 @@ function resolveFooterAttr(card: Card, index: number): { icone: string; rotulo: 
 }
 
 /** Full HTML document for a single populated card, ready to be loaded by Playwright. */
-export function buildCardHtml(card: Card): string {
-  const titleBox = boxToPx(SLOTS.title);
-  const artBox = boxToPx(SLOTS.art);
-  const descBox = boxToPx(SLOTS.description);
-  const priceBox = boxToPx(SLOTS.price);
-  const footerBox = boxToPx(SLOTS.footer);
+export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
+  const slots = getSlotsForSide(side);
+  const titleBox = boxToPx(slots.title);
+  const artBox = boxToPx(slots.art);
+  const descBox = boxToPx(slots.description);
+  const priceBox = boxToPx(slots.price);
+  const footerBox = boxToPx(slots.footer);
 
   const artUrl = fileUrl(path.join(ROOT_DIR, card.imagem));
-  const frameUrl = fileUrl(PATHS.frame);
+  const frameUrl = fileUrl(FRAME_PATHS[side]);
 
-  // One flat row: icon + "Rótulo: valor", pairs separated by a plain "|" —
-  // no boxes/dividers, matching the reference (text sits directly on the
-  // parchment, not in bordered cells).
+  // One flat row: icon + value (no label text — the icon conveys what the
+  // stat is), pairs separated by a plain "|" — no boxes/dividers, matching
+  // the reference (text sits directly on the parchment, not in bordered cells).
   // Fixed budget reserved for the two flourish glyphs flanking the subtitle,
   // so the subtitle's own fit-measurement wrapper has a real (non-shrink-wrap) width.
   const subtitleFlourishBudgetPx = 40;
@@ -109,21 +113,21 @@ export function buildCardHtml(card: Card): string {
   );
   const footerIconPx = 22;
   const footerGapPx = 6;
-  // Fixed (not shrink-to-fit) box for the "Rótulo: valor" text, so the
-  // autofit measurement has a real ceiling instead of an auto-sized parent
-  // that would always "fit" its own content.
+  // Width budget passed to the value via data-max-width-px (not a wrapping
+  // box) — the value must shrink-wrap and sit centered right next to its
+  // icon, not float inside an oversized invisible box (that left-shifted the
+  // whole icon+value pair visually). The autofit measurement still enforces
+  // this ceiling; see measureFit's maxWidthOverride in render.ts.
   const footerTextWidthPx = cellWidthPx - footerIconPx - footerGapPx - TEXT_SAFE_PADDING_PX * 2;
 
   const footerCells = Array.from({ length: FOOTER_CELL_COUNT }, (_, i) => {
     const attr = resolveFooterAttr(card, i);
     const iconUrl = attr.icone ? fileUrl(path.join(PATHS.icons, attr.icone)) : "";
-    const separator = i < FOOTER_CELL_COUNT - 1 ? `<span class="footer-separator">|</span>` : "";
+    const separator = i < FOOTER_CELL_COUNT - 1 ? `<span class="footer-separator"></span>` : "";
     return `
       <div class="footer-cell" style="width:${cellWidthPx}px;">
         ${iconUrl ? `<img class="footer-icon" src="${iconUrl}" alt="" />` : ""}
-        <div class="footer-text-box" style="width:${footerTextWidthPx}px;">
-          <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}">${escapeHtml(attr.rotulo)}: ${escapeHtml(attr.valor)}</div>
-        </div>
+        <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}" data-max-width-px="${footerTextWidthPx}">${escapeHtml(attr.valor)}</div>
       </div>
       ${separator}
     `;
@@ -214,6 +218,7 @@ export function buildCardHtml(card: Card): string {
     white-space: nowrap;
     text-align: center;
     color: #2b1a0d;
+    line-height: 1;
   }
 
   .description-slot {
@@ -253,12 +258,6 @@ export function buildCardHtml(card: Card): string {
     height: 22px;
     flex-shrink: 0;
   }
-  .footer-text-box {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    flex-shrink: 0;
-  }
   .footer-pair {
     font-family: "Lora", serif;
     font-weight: ${FONTS.footerValue.weight};
@@ -268,12 +267,17 @@ export function buildCardHtml(card: Card): string {
   .footer-separator {
     display: inline-block;
     width: ${footerSeparatorPx}px;
-    text-align: center;
-    font-family: "Lora", serif;
-    color: rgba(43, 26, 13, 0.4);
-    font-size: 22px;
-    line-height: 1;
     flex-shrink: 0;
+    position: relative;
+  }
+  .footer-separator::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 15%;
+    bottom: 15%;
+    width: 1px;
+    background: rgba(43, 26, 13, 0.35);
   }
 </style>
 </head>
@@ -315,8 +319,8 @@ export function buildCardHtml(card: Card): string {
 }
 
 /** Frame-only HTML, used by `pnpm template` to render output/template-blank.png for approval. */
-export function buildBlankFrameHtml(): string {
-  const frameUrl = fileUrl(PATHS.frame);
+export function buildBlankFrameHtml(side: CoinSide = "right"): string {
+  const frameUrl = fileUrl(FRAME_PATHS[side]);
   return `<!DOCTYPE html>
 <html>
 <head>

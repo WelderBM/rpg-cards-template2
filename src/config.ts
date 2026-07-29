@@ -24,9 +24,24 @@ export const PATHS = {
   fonts: path.join(ROOT_DIR, "assets/fonts"),
   art: path.join(ROOT_DIR, "assets/art"),
   data: path.join(ROOT_DIR, "data/cards.json"),
+  cardsToRepeat: path.join(ROOT_DIR, "data/cards-to-reapeat.json"),
   outputCards: path.join(ROOT_DIR, "output/cards"),
   outputPrint: path.join(ROOT_DIR, "output/print"),
+  outputTest: path.join(ROOT_DIR, "output/test"),
   templateBlank: path.join(ROOT_DIR, "output/template-blank.png"),
+};
+
+// ---------------------------------------------------------------------------
+// Coin side: the frame comes in two mirrored variants (price coin top-right
+// vs top-left). Picking a side selects both the frame image AND mirrors
+// SLOTS.price horizontally — see FRAME_PATHS / getPriceSlot below.
+// ---------------------------------------------------------------------------
+
+export type CoinSide = "left" | "right";
+
+export const FRAME_PATHS: Record<CoinSide, string> = {
+  right: path.join(ROOT_DIR, "assets/frame/frame-right.png"),
+  left: path.join(ROOT_DIR, "assets/frame/frame-left.png"),
 };
 
 // ---------------------------------------------------------------------------
@@ -101,21 +116,26 @@ export interface BoxMm {
   heightMm: number;
 }
 
+// Calibrated against assets/frame/final-template.png (the approved frame
+// artwork) via percentage grid overlay measurement. Re-run
+// scripts/grid-overlay.ts against a new frame if it's ever replaced, and
+// re-measure before touching these numbers.
+
 export const SLOTS = {
   /** Title band (top scroll). */
   title: { xMm: 8, yMm: 5, widthMm: 58, heightMm: 13 } as BoxMm,
 
   /** Item artwork window (center). */
-  art: { xMm: 11, yMm: 20, widthMm: 52, heightMm: 47 } as BoxMm,
+  art: { xMm: 11, yMm: 20, widthMm: 40, heightMm: 40 } as BoxMm,
 
   /** Description band (bottom scroll). */
-  description: { xMm: 7, yMm: 70, widthMm: 60, heightMm: 21 } as BoxMm,
+  description: { xMm: 7, yMm: 74, widthMm: 60, heightMm: 21 } as BoxMm,
+ 
+  /** Price coin: hangs below the title scroll into the open area, not glued to the top edge. */
+  price: { xMm: 52, yMm: 22.5, widthMm: 17, heightMm: 17 } as BoxMm,
 
-  /** Price coin, top-right corner. */
-  price: { xMm: 55, yMm: 2, widthMm: 16, heightMm: 16 } as BoxMm,
-
-  /** Footer strip with 3 attribute cells, at the very bottom. */
-  footer: { xMm: 5, yMm: 93, widthMm: 64, heightMm: 9 } as BoxMm,
+  /** Footer strip with 3 attribute cells — its own small scroll below the description band. */
+  footer: { xMm: 5, yMm: 94, widthMm: 64, heightMm: 9 } as BoxMm,
 } as const;
 
 export interface BoxPx {
@@ -132,6 +152,43 @@ export function boxToPx(box: BoxMm): BoxPx {
     topPx: BLEED_PX + mmToPx(box.yMm),
     widthPx: mmToPx(box.widthMm),
     heightPx: mmToPx(box.heightMm),
+  };
+}
+
+/** Mirrors a box horizontally across the card width: same margin, opposite edge. */
+function mirrorBoxMm(box: BoxMm): BoxMm {
+  return { ...box, xMm: CARD_WIDTH_MM - box.xMm - box.widthMm };
+}
+
+/**
+ * Price gets the pure mirror plus a small manual nudge (-1mm x, +1mm y),
+ * from fine-tuning the left-coin frame against its actual coin artwork —
+ * the two frame images aren't pixel-perfect mirrors of each other, so the
+ * plain formula was off by a hair. Re-measure with the percentage-grid
+ * technique (see git history / scripts/grid-overlay.ts) if frame-left.png
+ * ever changes.
+ */
+function mirrorPriceBoxMm(box: BoxMm): BoxMm {
+  return { xMm: CARD_WIDTH_MM - box.xMm - box.widthMm - 1, yMm: box.yMm + 1, widthMm: box.widthMm, heightMm: box.heightMm };
+}
+
+/**
+ * Resolves ALL of SLOTS for the given coin side. 'right' is the calibrated
+ * original. 'left' mirrors every box horizontally — not just price. This
+ * matters because SLOTS.art isn't centered (it's shifted toward the side
+ * away from the coin, keeping a deliberate ~1mm clearance from it); mirroring
+ * only the price and leaving art in place would collide the art box into
+ * the coin on the left-coin frame. Mirroring symmetric boxes (title,
+ * description, footer) is a no-op, so this is safe to apply uniformly.
+ */
+export function getSlotsForSide(side: CoinSide): typeof SLOTS {
+  if (side === "right") return SLOTS;
+  return {
+    title: mirrorBoxMm(SLOTS.title),
+    art: mirrorBoxMm(SLOTS.art),
+    description: mirrorBoxMm(SLOTS.description),
+    price: mirrorPriceBoxMm(SLOTS.price),
+    footer: mirrorBoxMm(SLOTS.footer),
   };
 }
 
@@ -198,19 +255,12 @@ export const FONTS = {
     minPx: 18,
     maxPx: 34,
   },
-  footerLabel: {
-    family: "Lora",
-    file: path.join(PATHS.fonts, "Lora-Variable.ttf"),
-    weight: 600,
-    minPx: 12,
-    maxPx: 18,
-  },
   footerValue: {
     family: "Cinzel",
     file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
     weight: 600,
-    minPx: 14,
-    maxPx: 24,
+    minPx: 18,
+    maxPx: 32,
   },
 };
 
@@ -240,11 +290,15 @@ export interface FooterAttrDefault {
   rotulo: string;
 }
 
+// Footer labels are never rendered (icon + value only — see card.html.ts),
+// but `rotulo` stays here as self-documentation of what each position means
+// per type. Position 3 is always Peso: the price already has its own coin
+// slot, so repeating it in the footer would be redundant.
 export const TYPE_FOOTER_DEFAULTS: Record<CardType, FooterAttrDefault[]> = {
   arma: [
     { icone: "broadsword.svg", rotulo: "Dano" },
+    { icone: "star-formation.svg", rotulo: "Crítico" },
     { icone: "weight.svg", rotulo: "Peso" },
-    { icone: "coins.svg", rotulo: "Custo" },
   ],
   item: [
     { icone: "backpack.svg", rotulo: "Peso" },
@@ -254,7 +308,7 @@ export const TYPE_FOOTER_DEFAULTS: Record<CardType, FooterAttrDefault[]> = {
   pocao: [
     { icone: "potion-ball.svg", rotulo: "Efeito" },
     { icone: "hourglass.svg", rotulo: "Duração" },
-    { icone: "coins.svg", rotulo: "Custo" },
+    { icone: "weight.svg", rotulo: "Peso" },
   ],
 };
 

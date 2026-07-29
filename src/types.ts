@@ -21,3 +21,15 @@ export interface Card {
   /** Path to the item art, relative to the project root, e.g. "assets/art/espada.png" */
   imagem: string;
 }
+
+export interface CardRepeatEntry {
+  /** Must match a Card.id in data/cards.json. */
+  id: string;
+  /** Total number of copies to print for this card (not additional — replaces the default single copy). */
+  "times-to-repeat": number;
+}
+
+/** Shape of data/cards-to-reapeat.json. */
+export interface CardsToRepeatFile {
+  "cards-to-repeat": CardRepeatEntry[];
+}

@@ -1,30 +1,520 @@
 [
   {
+    "id": "arco-curto",
+    "tipo": "arma",
+    "titulo": "Arco Curto",
+    "subtitulo": "Arma",
+    "preco": "T$30",
+    "descricao": "Uma arma antiga e comum, este arco é usado primariamente como ferramenta de caça, embora seja usado como arma de guerra por milícias, bandidos e exércitos menos equipados. Pode ser usado montado.",
+    "atributos": [
+      { "valor": "1d6" },
+      { "valor": "20x3" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/arco-curto.png"
+  },
+  {
+    "id": "arco-longo",
+    "tipo": "arma",
+    "titulo": "Arco Longo",
+    "subtitulo": "Arma",
+    "preco": "T$100",
+    "descricao": "Este arco reforçado tem a altura de uma pessoa. Ao contrário da versão curta, é primariamente uma arma de guerra. Por ter uma puxada pesada, permite que você aplique sua Força às rolagens de dano (ao contrário de outras armas de disparo). Porém, um arco longo não pode ser usado se você estiver montado.",
+    "atributos": [
+      { "valor": "1d8" },
+      { "valor": "20x3" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/arco-longo.png"
+  },
+  {
+    "id": "azagaia",
+    "tipo": "arma",
+    "titulo": "Azagaia",
+    "subtitulo": "Arma",
+    "preco": "T$1",
+    "descricao": "Uma lança leve e flexível, própria para arremesso. Pode ser usada como arma corpo a corpo, mas você sofre uma penalidade de –5 no teste de ataque.",
+    "atributos": [
+      { "valor": "1d6" },
+      { "valor": "20x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/azagaia.png"
+  },
+  {
+    "id": "besta-leve",
+    "tipo": "arma",
+    "titulo": "Besta Leve",
+    "subtitulo": "Arma",
+    "preco": "T$35",
+    "descricao": "Um arco montado sobre uma coronha de madeira com um gatilho, a besta leve é uma arma que dispara virotes com grande potência. Recarregar uma besta leve é uma ação de movimento.",
+    "atributos": [
+      { "valor": "1d8" },
+      { "valor": "19x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/besta-leve.png"
+  },
+  {
+    "id": "besta-pesada",
+    "tipo": "arma",
+    "titulo": "Besta Pesada",
+    "subtitulo": "Arma",
+    "preco": "T$50",
+    "descricao": "Versão maior e mais potente da besta leve. Recarregar uma besta pesada é uma ação padrão.",
+    "atributos": [
+      { "valor": "1d12" },
+      { "valor": "12x2" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/besta-pesada.png"
+  },
+  {
+    "id": "bordao",
+    "tipo": "arma",
+    "titulo": "Bordão",
+    "subtitulo": "Arma",
+    "preco": "T$0",
+    "descricao": "Um cajado apreciado por viajantes e camponeses por sua praticidade e fácil acesso. O bordão é uma arma dupla.",
+    "atributos": [
+      { "valor": "1d6" },
+      { "valor": "20x2" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/bordao.png"
+  },
+  {
+    "id": "chicote",
+    "tipo": "arma",
+    "titulo": "Chicote",
+    "subtitulo": "Arma",
+    "preco": "T$2",
+    "descricao": "Esta arma pode ser usada para atacar inimigos a até 4,5m e pode se enroscar nas mãos, pernas ou armas de seus adversários. O chicote é uma arma ágil e versátil, fornecendo +2 em testes para derrubar ou desarmar.",
+    "atributos": [
+      { "valor": "1d3" },
+      { "valor": "20x3" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/chicote.png"
+  },
+  {
+    "id": "cimitarra",
+    "tipo": "arma",
+    "titulo": "Cimitarra",
+    "subtitulo": "Arma",
+    "preco": "T$15",
+    "descricao": "Espada com a lâmina curva e muito afiada. A cimitarra é uma arma ágil.",
+    "atributos": [
+      { "valor": "1d6" },
+      { "valor": "18x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/cimitarra.png"
+  },
+  {
+    "id": "clava",
+    "tipo": "arma",
+    "titulo": "Clava",
+    "subtitulo": "Arma",
+    "preco": "T$0",
+    "descricao": "Um pedaço de madeira empunhado como arma, geralmente usado por bárbaros ou criaturas brutais — ou como arma improvisada, como um galho de árvore ou pedaço de mobília. Sendo fácil de conseguir.",
+    "atributos": [
+      { "valor": "1d6" },
+      { "valor": "20x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/clava.png"
+  },
+  {
+    "id": "corrente-de-espinhos",
+    "tipo": "arma",
+    "titulo": "Corrente de Espinhos",
+    "subtitulo": "Arma",
+    "preco": "T$25",
+    "descricao": "Esta arma pode ser usada para atacar inimigos a até 4,5m e pode se enroscar nas mãos, pernas ou armas de seus adversários. A corrente de espinhos é uma arma ágil, dupla e versátil, fornecendo +2 em testes para derrubar ou desarmar.",
+    "atributos": [
+      { "valor": "2d4" },
+      { "valor": "19x2" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/corrente-de-espinhos.png"
+  },
+  {
+    "id": "espada-bastarda",
+    "tipo": "arma",
+    "titulo": "Espada Bastarda",
+    "subtitulo": "Arma",
+    "preco": "T$35",
+    "descricao": "Maior e mais pesada que a espada longa, esta arma é tradicionalmente usada pelos cavaleiros de Bielefeld. A espada bastarda é uma arma adaptável. É muito grande para ser usada com uma só mão sem treinamento especial; por isso é uma arma exótica. Ela pode ser usada como uma arma marcial de duas mãos.",
+    "atributos": [
+      { "valor": "1d12" },
+      { "valor": "19x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/espada-bastarda.png"
+  },
+  {
+    "id": "espada-curta",
+    "tipo": "arma",
+    "titulo": "Espada Curta",
+    "subtitulo": "Arma",
+    "preco": "T$10",
+    "descricao": "O tipo mais comum de espada, usada por guardas ou como arma secundária de guerreiros mais capazes. Mede entre 40 e 50cm.",
+    "atributos": [
+      { "valor": "1d6" },
+      { "valor": "19x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/espada-curta.png"
+  },
+  {
     "id": "espada-longa",
     "tipo": "arma",
     "titulo": "Espada Longa",
-    "subtitulo": "Arma Marcial",
-    "preco": "T$75",
-    "descricao": "Uma lâmina reta e equilibrada, forjada nas oficinas de Valkaria. Corte confiável em qualquer duelo.",
+    "subtitulo": "Arma",
+    "preco": "T$15",
+    "descricao": "Arma típica de soldados e guerreiros, esta espada de dois gumes tem lâmina reta medindo entre 80cm e 1m.",
     "atributos": [
       { "valor": "1d8" },
-      { "valor": "1.5kg" },
-      { "valor": "T$75" }
+      { "valor": "19x2" },
+      { "valor": "1" }
     ],
     "imagem": "assets/art/espada-longa.png"
   },
   {
-    "id": "pocao-cura",
-    "tipo": "pocao",
-    "titulo": "Poção de Cura",
-    "subtitulo": "Alquimia",
-    "preco": "T$30",
-    "descricao": "Um líquido vermelho vivo que borbulha suavemente. Restaura 5d8 pontos de vida ao ser ingerido.",
+    "id": "florete",
+    "tipo": "arma",
+    "titulo": "Florete",
+    "subtitulo": "Arma",
+    "preco": "T$20",
+    "descricao": "A lâmina leve e fina desta espada torna a arma muito precisa. O florete é uma arma ágil.",
     "atributos": [
-      { "valor": "5d8 PV" },
-      { "valor": "Instant." },
-      { "valor": "T$30" }
+      { "valor": "1d6" },
+      { "valor": "18x2" },
+      { "valor": "1" }
     ],
-    "imagem": "assets/art/pocao-cura.png"
+    "imagem": "assets/art/florete.png"
+  },
+  {
+    "id": "foice",
+    "tipo": "arma",
+    "titulo": "Foice",
+    "subtitulo": "Arma",
+    "preco": "T$4",
+    "descricao": "Originalmente um instrumento agrícola, consiste de uma lâmina curva presa a um cabo de madeira. Uma arma tradicional de druidas.",
+    "atributos": [
+      { "valor": "1d6" },
+      { "valor": "20x3" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/foice.png"
+  },
+  {
+    "id": "funda",
+    "tipo": "arma",
+    "titulo": "Funda",
+    "subtitulo": "Arma",
+    "preco": "T$0",
+    "descricao": "Uma simples tira de couro usada para arremessar pedras polidas. Na falta de munição adequada, pode disparar pedras comuns, mas o dano é reduzido em um passo. Recarregar uma funda é uma ação de movimento. Ao contrário de outras armas de disparo, você aplica sua Força a rolagens de dano com uma funda.",
+    "atributos": [
+      { "valor": "1d4" },
+      { "valor": "20x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/funda.png"
+  },
+  {
+    "id": "gadanho",
+    "tipo": "arma",
+    "titulo": "Gadanho",
+    "subtitulo": "Arma",
+    "preco": "T$20",
+    "descricao": "Outra ferramenta agrícola, o gadanho é uma versão maior da foice, para uso com as duas mãos. Foi criada para ceifar cereais, mas também pode ceifar vidas.",
+    "atributos": [
+      { "valor": "2d4" },
+      { "valor": "20x4" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/gadanho.png"
+  },
+  {
+    "id": "katana",
+    "tipo": "arma",
+    "titulo": "Katana",
+    "subtitulo": "Arma",
+    "preco": "T$100",
+    "descricao": "A espada tradicional do samurai tem lâmina levemente curva e apenas um gume. A katana é uma arma adaptável e ágil. É muito grande para ser empunhada com uma só mão sem treinamento especial; por isso, é uma arma exótica. Ela pode ser usada como uma arma marcial de duas mãos.",
+    "atributos": [
+      { "valor": "1d10/1d8" },
+      { "valor": "20x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/katana.png"
+  },
+  {
+    "id": "lanca",
+    "tipo": "arma",
+    "titulo": "Lança",
+    "subtitulo": "Arma",
+    "preco": "T$2",
+    "descricao": "Qualquer arma feita com uma haste de madeira e uma ponta afiada, natural ou metálica. Por sua facilidade de fabricação, é muito comum entre orcs, kobolds, trogloditas e outras raças menos civilizadas. Uma lança pode ser arremessada.",
+    "atributos": [
+      { "valor": "1d6" },
+      { "valor": "20x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/lanca.png"
+  },
+  {
+    "id": "lanca-montada",
+    "tipo": "arma",
+    "titulo": "Lança Montada",
+    "subtitulo": "Arma",
+    "preco": "T$10",
+    "descricao": "A lança montada é uma arma alongada. Se você estiver montado, pode usá-la com apenas uma mão. Além disso, quando usada numa investida montada, causa +2d8 pontos de dano (note que dados extras não são multiplicados em caso de acerto crítico).",
+    "atributos": [
+      { "valor": "1d8" },
+      { "valor": "20x3" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/lanca-montada.png"
+  },
+  {
+    "id": "maca",
+    "tipo": "arma",
+    "titulo": "Maça",
+    "subtitulo": "Arma",
+    "preco": "T$12",
+    "descricao": "Bastão com um peso cheio de protuberâncias na ponta, a maça é usada por clérigos que fazem votos de não derramar sangue. De fato, um golpe de maça nem sempre derrama sangue, mas esmaga ossos.",
+    "atributos": [
+      { "valor": "1d8" },
+      { "valor": "20x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/maca.png"
+  },
+  {
+    "id": "machadinha",
+    "tipo": "arma",
+    "titulo": "Machadinha",
+    "subtitulo": "Arma",
+    "preco": "T$6",
+    "descricao": "Ferramenta útil para cortar madeira e também inimigos. Uma machadinha pode ser arremessada.",
+    "atributos": [
+      { "valor": "1d6" },
+      { "valor": "20x3" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/machadinha.png"
+  },
+  {
+    "id": "machado-anao",
+    "tipo": "arma",
+    "titulo": "Machado Anão",
+    "subtitulo": "Arma",
+    "preco": "T$30",
+    "descricao": "A arma preferida de onze entre dez guerreiros anões. Um machado anão é muito grande para ser usado com uma só mão sem treinamento especial; por isso é uma arma exótica. Ele pode ser usado como uma arma marcial de duas mãos.",
+    "atributos": [
+      { "valor": "1d10" },
+      { "valor": "20x3" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/machado-anao.png"
+  },
+  {
+    "id": "machado-de-batalha",
+    "tipo": "arma",
+    "titulo": "Machado de Batalha",
+    "subtitulo": "Arma",
+    "preco": "T$10",
+    "descricao": "Adaptado do machado de lenhador, este não é um instrumento para corte de árvores, mas sim uma arma capaz de causar ferimentos terríveis.",
+    "atributos": [
+      { "valor": "1d8" },
+      { "valor": "20x3" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/machado-de-batalha.png"
+  },
+  {
+    "id": "machado-de-guerra",
+    "tipo": "arma",
+    "titulo": "Machado de Guerra",
+    "subtitulo": "Arma",
+    "preco": "T$20",
+    "descricao": "Este imenso machado de lâmina dupla é uma arma extremamente perigosa.",
+    "atributos": [
+      { "valor": "1d12" },
+      { "valor": "20x3" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/machado-de-guerra.png"
+  },
+  {
+    "id": "machado-taurico",
+    "tipo": "arma",
+    "titulo": "Machado Táurico",
+    "subtitulo": "Arma",
+    "preco": "T$50",
+    "descricao": "Uma haste comprida com uma lâmina extremamente grossa na ponta, esta é uma arma ancestral dos minotauros. Um machado táurico é uma arma desbalanceada. Além disso, é muito grande para ser usado sem treinamento especial; por isso, é uma arma exótica.",
+    "atributos": [
+      { "valor": "2d8" },
+      { "valor": "20x3" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/machado-taurico.png"
+  },
+  {
+    "id": "mangual",
+    "tipo": "arma",
+    "titulo": "Mangual",
+    "subtitulo": "Arma",
+    "preco": "T$8",
+    "descricao": "Uma haste metálica ligada a uma corrente com uma esfera de aço na ponta, que pode se enroscar na arma do adversário. O mangual é uma arma versátil, fornecendo +2 em testes para desarmar.",
+    "atributos": [
+      { "valor": "1d8" },
+      { "valor": "20x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/mangual.png"
+  },
+  {
+    "id": "marreta",
+    "tipo": "arma",
+    "titulo": "Marreta",
+    "subtitulo": "Arma",
+    "preco": "T$20",
+    "descricao": "Uma haste de madeira resistente com uma pesada cabeça de metal ou pedra.",
+    "atributos": [
+      { "valor": "3d4" },
+      { "valor": "20x2" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/marreta.png"
+  },
+  {
+    "id": "martelo-de-guerra",
+    "tipo": "arma",
+    "titulo": "Martelo de Guerra",
+    "subtitulo": "Arma",
+    "preco": "T$12",
+    "descricao": "Outra ferramenta adaptada para combate, esta é a arma favorita de quase todos os anões que não usam machados.",
+    "atributos": [
+      { "valor": "1d8" },
+      { "valor": "20x3" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/martelo-de-guerra.png"
+  },
+  {
+    "id": "montante",
+    "tipo": "arma",
+    "titulo": "Montante",
+    "subtitulo": "Arma",
+    "preco": "T$50",
+    "descricao": "Enorme e pesada, esta espada de 1,5m de comprimento é uma arma poderosa.",
+    "atributos": [
+      { "valor": "2d6" },
+      { "valor": "19x2" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/montante.png"
+  },
+  {
+    "id": "mosquete",
+    "tipo": "arma",
+    "titulo": "Mosquete",
+    "subtitulo": "Arma",
+    "preco": "T$500",
+    "descricao": "Uma arma de fogo de uso difícil, mas com poder devastador. Recarregar um mosquete é uma ação padrão.",
+    "atributos": [
+      { "valor": "2d8" },
+      { "valor": "19x3" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/mosquete.png"
+  },
+  {
+    "id": "picareta",
+    "tipo": "arma",
+    "titulo": "Picareta",
+    "subtitulo": "Arma",
+    "preco": "T$8",
+    "descricao": "Usada por mineradores, esta ferramenta quebra pedras com facilidade. Imagine o que pode fazer com carne e osso!",
+    "atributos": [
+      { "valor": "1d6" },
+      { "valor": "20x4" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/picareta.png"
+  },
+  {
+    "id": "pique",
+    "tipo": "arma",
+    "titulo": "Pique",
+    "subtitulo": "Arma",
+    "preco": "T$2",
+    "descricao": "Essencialmente uma lança muito longa. O pique é uma arma alongada.",
+    "atributos": [
+      { "valor": "1d8" },
+      { "valor": "20x2" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/pique.png"
+  },
+  {
+    "id": "pistola",
+    "tipo": "arma",
+    "titulo": "Pistola",
+    "subtitulo": "Arma",
+    "preco": "T$250",
+    "descricao": "A arma de fogo mais comum. Recarregar uma pistola é uma ação padrão.",
+    "atributos": [
+      { "valor": "2d6" },
+      { "valor": "19x3" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/pistola.png"
+  },
+  {
+    "id": "rede",
+    "tipo": "arma",
+    "titulo": "Rede",
+    "subtitulo": "Arma",
+    "preco": "T$20",
+    "descricao": "A rede tem pequenos dentes em sua trama e uma corda para controlar os inimigos presos. Se você acertar um ataque com a rede, não causa dano. Em vez disso, a vítima fica enredada. Conferir pág 150 do livro.",
+    "atributos": [
+      { "valor": "--" },
+      { "valor": "--" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/rede.png"
+  },
+  {
+    "id": "tacape",
+    "tipo": "arma",
+    "titulo": "Tacape",
+    "subtitulo": "Arma",
+    "preco": "T$0",
+    "descricao": "Versão maior e/ou com pregos de uma clava. Usado por bárbaros e humanoides bestiais, não é uma arma elegante, mas faz o serviço.",
+    "atributos": [
+      { "valor": "1d10" },
+      { "valor": "20x2" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/tacape.png"
+  },
+  {
+    "id": "tridente",
+    "tipo": "arma",
+    "titulo": "Tridente",
+    "subtitulo": "Arma",
+    "preco": "T$15",
+    "descricao": "Uma lança com três pontas, favorita de povos marinhos e gladiadores e própria para prender as pernas do oponente. O tridente é uma arma versátil, fornecendo +2 em testes para derrubar. Um tridente pode ser arremessado.",
+    "atributos": [
+      { "valor": "1d8" },
+      { "valor": "20x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/tridente.png"
   }
 ]

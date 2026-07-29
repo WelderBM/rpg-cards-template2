@@ -1,11 +1,12 @@
 {
   "name": "rpg-cards-renderer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "template": "tsx scripts/template.ts",
     "build": "tsx scripts/build.ts",
+    "test": "tsx scripts/test.ts",
     "dev": "tsx scripts/dev.ts",
     "typecheck": "tsc --noEmit"
   },

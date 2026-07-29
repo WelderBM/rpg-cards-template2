@@ -4,7 +4,13 @@
  * editing card data; for the one-shot commands use `pnpm template` / `pnpm build`.
  */
 import chokidar from "chokidar";
-import { ROOT_DIR } from "../src/config.js";
+import { type CoinSide, ROOT_DIR } from "../src/config.js";
+
+// Dev watch mode is a fast PREVIEW loop, not the definitive build — it
+// doesn't prompt for a coin side on every rebuild. Pass one on startup
+// (`pnpm dev -- left`) if you want to preview the left-coin frame; defaults
+// to "right" otherwise.
+const side: CoinSide = process.argv.slice(2).includes("left") ? "left" : "right";
 
 let running = false;
 let queued = false;
@@ -17,12 +23,12 @@ async function runBuild(): Promise<void> {
   running = true;
   queued = false;
 
-  console.log(`\n[dev] rebuilding at ${new Date().toLocaleTimeString()}...`);
+  console.log(`\n[dev] rebuilding (lado: ${side}) at ${new Date().toLocaleTimeString()}...`);
   try {
     // Cache-busted import so edited modules (and their transitive imports) are
     // picked up fresh on every rebuild, without restarting the watcher process.
     const { runBuild: run } = await import(`./build.js?t=${Date.now()}`);
-    await run();
+    await run(side);
   } catch (err) {
     console.error("[dev] build failed:", err);
   } finally {

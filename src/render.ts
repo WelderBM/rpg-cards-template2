@@ -8,6 +8,7 @@ import {
   AUTOFIT_PRECISION_PX,
   CANVAS_HEIGHT_PX,
   CANVAS_WIDTH_PX,
+  type CoinSide,
   LINE_HEIGHT,
   PATHS,
 } from "./config.js";
@@ -57,6 +58,12 @@ interface FitMeasurement {
  * size against its parent's usable area, i.e. the parent's clientWidth/Height
  * MINUS the parent's own CSS padding (clientWidth/Height includes padding, but
  * the padding is exactly the safety margin we must not let text cross).
+ *
+ * If the element itself carries `data-max-width-px`, that overrides the width
+ * budget instead of the parent's clientWidth. This is for cases (the footer's
+ * icon+value pairs) where the element must visually shrink-wrap and center
+ * next to a sibling icon, so there's no fixed-width parent box to measure
+ * against — the ceiling is supplied directly instead.
  */
 function measureFit(selector: string): FitMeasurement {
   const el = document.querySelector(selector) as HTMLElement;
@@ -64,7 +71,8 @@ function measureFit(selector: string): FitMeasurement {
   const cs = getComputedStyle(box);
   const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
   const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
-  const availWidthPx = box.clientWidth - padX;
+  const maxWidthOverride = el.dataset.maxWidthPx ? Number(el.dataset.maxWidthPx) : null;
+  const availWidthPx = maxWidthOverride ?? box.clientWidth - padX;
   const availHeightPx = box.clientHeight - padY;
   const textWidthPx = el.scrollWidth;
   const textHeightPx = el.scrollHeight;
@@ -199,11 +207,11 @@ async function autofitCard(page: Page, cardId: string): Promise<void> {
 }
 
 /** Renders only the frame layer (no text/art/price) to output/template-blank.png, for visual approval. */
-export async function renderTemplateBlank(): Promise<string> {
+export async function renderTemplateBlank(side: CoinSide = "right"): Promise<string> {
   const browser = await chromium.launch();
   try {
     const page = await newPage(browser);
-    await loadHtml(page, buildBlankFrameHtml());
+    await loadHtml(page, buildBlankFrameHtml(side));
     await fs.mkdir(path.dirname(PATHS.templateBlank), { recursive: true });
     await page.screenshot({ path: PATHS.templateBlank, omitBackground: true });
     return PATHS.templateBlank;
@@ -213,14 +221,14 @@ export async function renderTemplateBlank(): Promise<string> {
 }
 
 /** Renders every card to output/cards/{id}.png. Throws TextOverflowError on the first card whose text can't be made to fit. */
-export async function renderCards(cards: Card[]): Promise<string[]> {
+export async function renderCards(cards: Card[], side: CoinSide = "right"): Promise<string[]> {
   const browser = await chromium.launch();
   const outputPaths: string[] = [];
   try {
     await fs.mkdir(PATHS.outputCards, { recursive: true });
     const page = await newPage(browser);
     for (const card of cards) {
-      await loadHtml(page, buildCardHtml(card));
+      await loadHtml(page, buildCardHtml(card, side));
       await autofitCard(page, card.id);
       const outPath = path.join(PATHS.outputCards, `${card.id}.png`);
       await page.screenshot({ path: outPath, omitBackground: true });
@@ -228,6 +236,20 @@ export async function renderCards(cards: Card[]): Promise<string[]> {
       console.log(`  rendered ${outPath}`);
     }
     return outputPaths;
+  } finally {
+    await browser.close();
+  }
+}
+
+/** Renders a single card to an arbitrary path, for side-by-side comparisons (see scripts/test.ts). */
+export async function renderSingleCard(card: Card, side: CoinSide, outPath: string): Promise<void> {
+  const browser = await chromium.launch();
+  try {
+    await fs.mkdir(path.dirname(outPath), { recursive: true });
+    const page = await newPage(browser);
+    await loadHtml(page, buildCardHtml(card, side));
+    await autofitCard(page, card.id);
+    await page.screenshot({ path: outPath, omitBackground: true });
   } finally {
     await browser.close();
   }

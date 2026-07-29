@@ -1,0 +1,8 @@
+{
+    "cards-to-repeat": [
+        {
+            "id": "id-exemplo",
+            "times-to-repeat": 3
+        }
+    ]
+}

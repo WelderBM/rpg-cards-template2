@@ -14,6 +14,46 @@ import {
   SHEET_HEIGHT_MM,
   SHEET_WIDTH_MM,
 } from "./config.js";
+import type { CardsToRepeatFile } from "./types.js";
+
+/**
+ * Reads data/cards-to-reapeat.json (optional — missing file just means no
+ * repeats). Each entry's "times-to-repeat" is the TOTAL number of copies to
+ * print for that card id (not additional on top of the default 1).
+ */
+async function loadRepeatCounts(cardIdsInOrder: string[]): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  let raw: string;
+  try {
+    raw = await fs.readFile(PATHS.cardsToRepeat, "utf-8");
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return counts;
+    throw err;
+  }
+
+  const parsed: CardsToRepeatFile = JSON.parse(raw);
+  const knownIds = new Set(cardIdsInOrder);
+  for (const entry of parsed["cards-to-repeat"] ?? []) {
+    if (!knownIds.has(entry.id)) {
+      console.warn(
+        `  [aviso] cards-to-reapeat.json: id "${entry.id}" não existe em data/cards.json — ignorado.`,
+      );
+      continue;
+    }
+    counts.set(entry.id, entry["times-to-repeat"]);
+  }
+  return counts;
+}
+
+/** Expands cardIdsInOrder so each repeated id appears `times-to-repeat` times (grouped together), others once. */
+function expandWithRepeats(cardIdsInOrder: string[], repeatCounts: Map<string, number>): string[] {
+  const expanded: string[] = [];
+  for (const id of cardIdsInOrder) {
+    const count = repeatCounts.get(id) ?? 1;
+    for (let i = 0; i < count; i++) expanded.push(id);
+  }
+  return expanded;
+}
 
 const PT_PER_MM = 72 / 25.4;
 const mmToPt = (mm: number): number => mm * PT_PER_MM;
@@ -99,11 +139,23 @@ function drawCropMarks(page: import("pdf-lib").PDFPage): void {
  * Reads output/cards/{id}.png for each card and composes A4 sheets of
  * CARDS_PER_SHEET (8) cards each, saved to output/print/sheet-{n}.pdf.
  * The last sheet may have fewer cards; empty cells are simply left blank.
+ *
+ * Cards listed in data/cards-to-reapeat.json are expanded to their full
+ * "times-to-repeat" copy count (grouped together, in cards.json order)
+ * before being split into sheets.
  */
 export async function imposeToPdf(cardIdsInOrder: string[]): Promise<string[]> {
   await fs.mkdir(PATHS.outputPrint, { recursive: true });
 
-  const pngPaths = cardIdsInOrder.map((id) => path.join(PATHS.outputCards, `${id}.png`));
+  const repeatCounts = await loadRepeatCounts(cardIdsInOrder);
+  const expandedIds = expandWithRepeats(cardIdsInOrder, repeatCounts);
+  if (repeatCounts.size > 0) {
+    console.log(
+      `  repetições aplicadas: ${[...repeatCounts.entries()].map(([id, n]) => `${id}×${n}`).join(", ")} — total de ${expandedIds.length} cópias a imprimir`,
+    );
+  }
+
+  const pngPaths = expandedIds.map((id) => path.join(PATHS.outputCards, `${id}.png`));
   const sheets = chunk(pngPaths, CARDS_PER_SHEET);
 
   const outputPaths: string[] = [];
