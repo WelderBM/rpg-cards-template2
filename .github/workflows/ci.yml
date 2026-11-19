@@ -16,7 +16,9 @@ jobs:
   ci:
     # O nome do job é o nome do check que o gate espera (.claude/ecossistema.json → checkCI).
     name: CI
-    runs-on: ubuntu-latest
+    # Fixo em 24.04: o Playwright 1.56.1 não instala Chromium no ubuntu-latest (26.04).
+    # Só mudar junto com um upgrade do Playwright no package.json.
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
