@@ -1,0 +1,46 @@
+name: Sync backlog label
+
+# "Backlog" (sem milestone atribuído) é o estado padrão de uma issue nova —
+# este workflow só mantém a label `backlog` espelhando esse estado real,
+# nunca decide o que entra em sprint. Atribuir/remover milestone continua
+# manual — é o próprio ponto do planejamento de sprint (Marco N), não faz
+# sentido automatizar a decisão em si.
+#
+# Dispara em três eventos:
+#   - opened: issue nova sem milestone já nasce marcada como backlog.
+#   - milestoned: saiu do backlog (entrou num Marco) — remove a label.
+#   - demilestoned: voltou pro backlog (milestone removido) — adiciona de novo.
+on:
+  issues:
+    types: [opened, milestoned, demilestoned]
+
+permissions:
+  issues: write
+
+jobs:
+  sync-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add or remove the backlog label to match milestone state
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const hasMilestone = issue.milestone != null;
+            const hasLabel = issue.labels.some((label) => label.name === "backlog");
+
+            if (hasMilestone && hasLabel) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                name: "backlog",
+              });
+            } else if (!hasMilestone && !hasLabel) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: ["backlog"],
+              });
+            }

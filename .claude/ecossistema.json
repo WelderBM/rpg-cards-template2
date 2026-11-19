@@ -1,0 +1,11 @@
+{
+  "integracao": "dev",
+  "producao": "main",
+  "checkCI": "CI",
+  "revisaoLocal": true,
+  "maxLinhas": 150,
+  "arquivosSensiveis": [
+    "^src/config\\.ts$",
+    "^assets/frame/"
+  ]
+}

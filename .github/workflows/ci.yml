@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    # O nome do job é o nome do check que o gate espera (.claude/ecossistema.json → checkCI).
+    name: CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Checagem de tipos
+        run: pnpm exec tsc --noEmit
+
+      - name: Testes do gate de revisão
+        run: node --test scripts/ci/*.test.mjs
+
+      - name: Instalar Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Renderizar carta de amostra (pnpm test)
+        run: pnpm test
+
+      - name: Guardar as cartas renderizadas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cartas-de-amostra
+          path: output/test/
+          if-no-files-found: ignore
+          retention-days: 7
