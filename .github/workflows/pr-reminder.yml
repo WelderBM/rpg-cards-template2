@@ -1,0 +1,53 @@
+name: Lembrete de PRs aguardando você
+
+# Todo dia às 12h UTC (ajuste o cron ao fuso do dono): se houver PR aberto com a label
+# "precisa-de-voce", atualiza a issue fixa "📋 PRs aguardando você" e
+# menciona o dono (gera notificação no GitHub/e-mail/celular). Sem pendência,
+# não notifica ninguém.
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      OWNER: ${{ github.repository_owner }}
+      TITLE: "📋 PRs aguardando você"
+    steps:
+      - name: Atualizar lembrete
+        run: |
+          set -euo pipefail
+          LIST=$(gh pr list --state open --label precisa-de-voce \
+            --json number,title,url,updatedAt \
+            --jq 'sort_by(.updatedAt) | .[] | "- [ ] #\(.number) — \(.title) (parado desde \(.updatedAt[0:10]))"')
+
+          ISSUE=$(gh issue list --state open --label lembrete --search "in:title \"$TITLE\"" \
+            --json number --jq '.[0].number // empty')
+
+          if [ -z "$LIST" ]; then
+            BODY="Nenhum PR aguardando você. ✅ (atualizado em $(date -u +%F))"
+          else
+            BODY=$(printf 'PRs com a label `precisa-de-voce` (atualizado em %s):\n\n%s\n' "$(date -u +%F)" "$LIST")
+          fi
+
+          if [ -z "$ISSUE" ]; then
+            ISSUE=$(gh issue create --title "$TITLE" --label lembrete --body "$BODY" | grep -oE '[0-9]+$')
+            gh issue pin "$ISSUE" || true
+          else
+            gh issue edit "$ISSUE" --body "$BODY"
+          fi
+
+          # Só menciona (= notifica) quando há pendência.
+          if [ -n "$LIST" ]; then
+            COUNT=$(printf '%s\n' "$LIST" | wc -l | tr -d ' ')
+            gh issue comment "$ISSUE" --body "@$OWNER bom dia — $COUNT PR(s) aguardando você. Lista atualizada acima."
+          fi
