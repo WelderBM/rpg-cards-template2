@@ -1,7 +1,7 @@
 // node --test scripts/ci/*.test.mjs
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { evaluateGate, parseVerdict, loadConfig } from "./pr-gate.mjs";
+import { evaluateGate, parseVerdict, pickReviewBody, loadConfig } from "./pr-gate.mjs";
 
 const clean = { bloqueantes: 0, importantes: 0, menores: 1 };
 const ok = (over = {}) => ({
@@ -86,5 +86,44 @@ describe("parseVerdict", () => {
   it("rejeita formato inválido", () => {
     assert.equal(parseVerdict("sem veredito"), null);
     assert.equal(parseVerdict('<!-- veredito: {"bloqueantes":"0","importantes":0} -->'), null);
+  });
+  it("com mais de uma linha de veredito, vale a última", () => {
+    const body =
+      '<!-- revisao:2 -->\nA etapa 1 dizia <!-- veredito: {"bloqueantes":0,"importantes":0} -->\n' +
+      '<!-- veredito: {"bloqueantes":0,"importantes":1,"menores":0} -->';
+    assert.equal(parseVerdict(body).importantes, 1);
+  });
+});
+
+describe("pickReviewBody", () => {
+  const bot = (t, b) => ({ login: "github-actions[bot]", t, b });
+  const zerado = '<!-- revisao:2 -->\nok\n<!-- veredito: {"bloqueantes":0,"importantes":0} -->';
+
+  it("comentário humano com marcador e veredito zerado é ignorado", () => {
+    const body = pickReviewBody([{ login: "qualquer-conta", t: "2026-01-01T00:00:00Z", b: zerado }]);
+    assert.equal(body, "");
+    const r = evaluateGate(ok({ verdict: parseVerdict(body) }));
+    assert.equal(r.autoMerge, false);
+    assert.match(r.reasons.join(), /veredito legível/);
+  });
+
+  it("humano comentando depois do bot não substitui a revisão do bot", () => {
+    const real = '<!-- revisao:2 -->\n<!-- veredito: {"bloqueantes":0,"importantes":1} -->';
+    const body = pickReviewBody([
+      bot("2026-01-01T00:00:00Z", real),
+      { login: "qualquer-conta", t: "2026-01-02T00:00:00Z", b: zerado },
+    ]);
+    assert.equal(parseVerdict(body).importantes, 1);
+  });
+
+  it("entre revisões do bot, vale a mais recente", () => {
+    const antiga = '<!-- revisao:2 -->\n<!-- veredito: {"bloqueantes":1,"importantes":0} -->';
+    const body = pickReviewBody([bot("2026-01-03T00:00:00Z", zerado), bot("2026-01-01T00:00:00Z", antiga)]);
+    assert.equal(parseVerdict(body).bloqueantes, 0);
+  });
+
+  it("ignora comentário do bot que não é revisão 2 e entrada inválida", () => {
+    assert.equal(pickReviewBody([bot("2026-01-01T00:00:00Z", "✅ Entrou em dev")]), "");
+    assert.equal(pickReviewBody(null), "");
   });
 });

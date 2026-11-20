@@ -36,8 +36,10 @@ const TEST_FILE = /(\.test\.|\.spec\.|_test\.|(^|\/)tests?\/)/;
 
 // Última linha do comentário do revisor 2:
 //   <!-- veredito: {"bloqueantes":0,"importantes":1,"menores":2} -->
+// Vale a ÚLTIMA linha: a regra é o comentário terminar com ela, e o texto
+// pode citar outro veredito antes (o da etapa 1, ou o formato esperado).
 export function parseVerdict(body) {
-  const m = /<!--\s*veredito:\s*(\{[^}]*\})\s*-->/.exec(body ?? "");
+  const m = [...String(body ?? "").matchAll(/<!--\s*veredito:\s*(\{[^}]*\})\s*-->/g)].at(-1);
   if (!m) return null;
   try {
     const v = JSON.parse(m[1]);
@@ -46,6 +48,23 @@ export function parseVerdict(body) {
   } catch {
     return null;
   }
+}
+
+// Só conta como etapa 2 o comentário publicado pelo próprio workflow
+// ("Publicar revisão", com o GITHUB_TOKEN). Em repositório público qualquer
+// conta pode comentar no PR um texto com os marcadores e um veredito zerado.
+export const TRUSTED_REVIEW_AUTHOR = "github-actions[bot]";
+const MAX_REVIEW_CHARS = 20000;
+
+// comments: [{ login, t (created_at ISO), b (body) }] → corpo da revisão 2
+// mais recente do autor confiável, ou "" se não houver.
+export function pickReviewBody(comments) {
+  const own = (Array.isArray(comments) ? comments : []).filter(
+    (c) => c?.login === TRUSTED_REVIEW_AUTHOR && typeof c.b === "string" && c.b.includes("<!-- revisao:2 -->"),
+  );
+  if (own.length === 0) return "";
+  own.sort((a, b) => String(a.t).localeCompare(String(b.t)));
+  return own.at(-1).b.slice(-MAX_REVIEW_CHARS);
 }
 
 export function loadConfig(cfg = {}) {
@@ -113,6 +132,9 @@ if (process.argv[1] && process.argv[1].endsWith("pr-gate.mjs") && process.argv[2
       cfg = JSON.parse(readFileSync(process.argv[3], "utf8"));
     } catch {}
   }
-  const result = evaluateGate({ ...input, verdict: parseVerdict(input.reviewBody) }, loadConfig(cfg));
+  // `comments` (com autor) é o formato atual; `reviewBody` fica por
+  // compatibilidade com o workflow antigo que ainda esteja no branch padrão.
+  const reviewBody = Array.isArray(input.comments) ? pickReviewBody(input.comments) : input.reviewBody;
+  const result = evaluateGate({ ...input, verdict: parseVerdict(reviewBody) }, loadConfig(cfg));
   process.stdout.write(JSON.stringify(result));
 }
