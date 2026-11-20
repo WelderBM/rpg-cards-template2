@@ -38,6 +38,7 @@ jobs:
         github.event.issue.pull_request &&
         github.event.issue.state == 'open' &&
         github.event.comment.user.type != 'Bot' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association) &&
         contains(github.event.comment.body, '<!-- revisao:1 -->'))
     runs-on: ubuntu-latest
     # Até 15 min esperando a etapa 1 + revisão + até 20 min esperando o CI.
@@ -168,10 +169,13 @@ jobs:
           fi
 
           # Só a revisão MAIS RECENTE vale: com várias (label "revisar"), o
-          # veredito antigo vinha primeiro e era o lido (PR #249).
-          BODY=$(gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
-            --jq '.[] | select(.body | contains("<!-- revisao:2 -->")) | {t: .created_at, b: .body}' \
-            | jq -rs 'sort_by(.t) | last | .b // ""' | tail -c 20000)
+          # veredito antigo vinha primeiro e era o lido (PR #249). E só a que
+          # o próprio workflow publicou: qualquer conta pode comentar com os
+          # marcadores. O filtro (autor + mais recente) é o pickReviewBody do
+          # pr-gate.mjs, testado; aqui só vai a lista com o autor.
+          gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
+            --jq '[.[] | {login: .user.login, t: .created_at, b: .body}]' \
+            | jq -s 'add // []' > "$RUNNER_TEMP/comments.json"
           INFO=$(gh pr view "$PR" --json baseRefName,headRefOid,files)
           BASE=$(jq -r .baseRefName <<<"$INFO")
           SHA=$(jq -r .headRefOid <<<"$INFO")
@@ -188,9 +192,9 @@ jobs:
             sleep 20
           done
 
-          jq -n --arg body "$BODY" --arg base "$BASE" --arg ci "$CI" \
+          jq -n --slurpfile comments "$RUNNER_TEMP/comments.json" --arg base "$BASE" --arg ci "$CI" \
             --argjson files "$(jq '[.files[] | {path, additions, deletions}]' <<<"$INFO")" \
-            '{reviewBody: $body, base: $base, ciConclusion: (if $ci == "" then null else $ci end), files: $files}' \
+            '{comments: $comments[0], base: $base, ciConclusion: (if $ci == "" then null else $ci end), files: $files}' \
             > "$RUNNER_TEMP/gate.json"
           git show origin/dev:.claude/ecossistema.json > "$RUNNER_TEMP/eco.json" 2>/dev/null || echo "{}" > "$RUNNER_TEMP/eco.json"
           node "$RUNNER_TEMP/pr-gate.mjs" "$RUNNER_TEMP/gate.json" "$RUNNER_TEMP/eco.json" > "$RUNNER_TEMP/decision.json"
