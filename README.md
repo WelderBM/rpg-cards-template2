@@ -82,6 +82,30 @@ Observa `data/`, `src/` e `assets/frame/` e re-executa o build a cada
 mudança. Aceita um lado opcional (`pnpm dev -- left`, padrão `right`) mas
 **nunca pergunta** — é um preview rápido, não a build definitiva.
 
+### 5. `pnpm art` — arte do item gerada por IA (Gemini)
+
+Gera a ilustração de cada item a partir de `data/art-prompts.json`: `estilo`
+(guia de estilo, em inglês), `evitar` e `itens[id]` (o objeto). O script pede
+o objeto sobre fundo branco, remove o fundo (flood-fill a partir das bordas,
+então o brilho branco dentro do vidro não vira buraco), apara a imagem e
+salva em `assets/art/{id}.png`.
+
+```bash
+pnpm art                          # todo id do art-prompts.json que ainda não tem arte
+pnpm art -- sono luz              # só esses
+pnpm art -- sono --variacoes=3    # 3 candidatas em output/arte/, com prévia da carta nos dois lados
+pnpm art -- --aprovar=sono:2      # instala a candidata 2 em assets/art/sono.png
+pnpm art -- sono --refazer        # gera de novo mesmo se já houver arte
+```
+
+Precisa de uma chave da API do Gemini em `.env` na raiz (o `.env` está no
+`.gitignore`; nunca commitar):
+
+```
+GEMINI_API_KEY=<sua chave>
+# opcional: GEMINI_IMAGE_MODEL=gemini-nano-banana-2.1
+```
+
 ## Lado da moeda (frame espelhado)
 
 O frame aprovado existe em duas versões, espelhadas horizontalmente:

@@ -27,7 +27,10 @@ Histórico de decisões e contexto que não é óbvio só de ler o código. Orde
 ## Arte das cartas — direção (22/11/2026)
 
 - O dono decidiu que a arte de item será **gerada por IA, de forma automatizada**, no estilo da referência aprovada (`assets/inspiration/exemplo-carta-pronta.jpg`: item pintado, realista, luz quente, sobre o pergaminho). Os ícones atuais (`pocao-cura.png`, `espada-longa.png`) são provisórios.
-- Ainda em aberto: o provedor de IA, o escopo (só poções ou todas as cartas) e se a geração roda como script do repo ou dentro da sessão. Nada foi implementado ainda.
+- (22/11/2026) Provedor escolhido pelo dono: **Gemini**. Implementado como `pnpm art` (`scripts/art.ts`, REST `generateContent`, modelo padrão `gemini-nano-banana-2.1`, chave `GEMINI_API_KEY` em `.env`, que fica fora do git). Começa pelas 17 poções.
+- Direção de arte: a sessão revisora escreveu `data/art-prompts.json`, com o guia de estilo baseado na Adaga, as 3 famílias de recipiente (poção = frasco redondo com rolha, lacre e barbante; óleo = vidro baixo e achatado com escorrido; granada = esfera de vidro com cintas de ferro e argola), 1 cor de destaque diferente por poção, sem moedas e sem cenário. Ela também confere as imagens geradas dentro da carta.
+- **Fundo branco e recorte, não multiply** (proposta da revisora, adotada): com *multiply*, um fundo cor de pergaminho vira um quadrado marrom; poções brilhantes (Luz, Curar Ferimentos, Proteção Divina) ficam foscas, porque o multiply nunca clareia; e o `drop-shadow` do `.art-image` desenha uma sombra retangular em volta de um PNG opaco. Por isso a imagem é pedida sobre branco puro. O fundo é removido por flood-fill a partir das bordas (não "todo branco vira transparente", para o brilho branco dentro do vidro não virar buraco), com borda suave de 2 px, e a imagem é aparada.
+- Não se manda a carta de referência como imagem para o Gemini: os modelos de imagem atuais tratam a referência como objeto a incluir (a adaga apareceria), não como estilo. O estilo vai só no texto.
 
 ## Arte ausente
 

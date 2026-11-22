@@ -18,7 +18,11 @@ pnpm build -- --side=left               # --side=<left|right> flag form also acc
 pnpm build -- right --ids=balas,flechas # partial batch: only these cards (whole catalog still validated; comma or space separated)
 pnpm build                              # prompts interactively for the side if none is given — never guesses
 pnpm dev -- left                        # watch mode (data/, src/, assets/frame/); optional side, defaults to right, never prompts
+pnpm art                                # AI item art (Gemini) for every id in data/art-prompts.json without assets/art/{id}.png
+pnpm art -- sono --variacoes=3          # 3 candidates + card previews in output/arte/; pick with: pnpm art -- --aprovar=sono:2
 ```
+
+`pnpm art` needs `GEMINI_API_KEY` in the environment or in `.env` (git-ignored; never commit it). It asks for the object on a pure white background, then flood-fills the background from the image edges to transparent and trims, so the card's drop-shadow follows the object's outline. It never uses a reference image: the current Gemini image models treat a reference as an object to include, not as a style. The style lives in the text of `data/art-prompts.json` (`estilo`, `evitar`, `itens[id]`).
 
 `pnpm build` and `pnpm dev` both require a coin side (`left`/`right`) because the frame ships as two mirrored PNGs — see Architecture below. `pnpm build` is the only command that touches `output/cards/` and `output/print/`; `pnpm test` never does. Every build deletes the previous `output/print/sheet-*.pdf` first, so a smaller batch never leaves stale sheets behind.
 

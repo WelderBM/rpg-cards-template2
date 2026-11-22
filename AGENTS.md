@@ -19,6 +19,7 @@
 | Rodar local | `pnpm dev -- right` (watch) · `pnpm template` (só a moldura) · `pnpm build -- right\|left` (lote definitivo) · `pnpm build -- right --ids=a,b` (só essas cartas) |
 | Checar tipos/lint | `pnpm typecheck` (= `tsc --noEmit`; não há lint) |
 | Testes | `pnpm test` (as 2 poções de amostra nos dois lados, em `output/test/`) · `pnpm test -- <id> [<id>…]` (qualquer carta). Não há suíte de testes unitários |
+| Arte por IA | `pnpm art` (Gemini; precisa de `GEMINI_API_KEY` no `.env`, que nunca vai para o git) · `pnpm art -- <id> --variacoes=3` e depois `--aprovar=<id>:<n>` |
 | Testes do gate de revisão | `node --test scripts/ci/*.test.mjs` |
 | Fila de prioridade | `node scripts/prioridade.mjs` |
 
