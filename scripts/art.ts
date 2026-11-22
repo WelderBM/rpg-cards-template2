@@ -151,11 +151,37 @@ export async function cutOutBackground(page: Page, base64: string, mimeType: str
       for (let k = 0; k < w * h; k++) if (mark[k] === 0 && touches(k, 1)) mark[k] = 2;
       for (let k = 0; k < w * h; k++) if (mark[k] === 0 && touches(k, 2)) mark[k] = 3;
 
+      // Rim coverage: a rim pixel is (object colour × alpha) + (white × (1 − alpha)),
+      // so alpha ≈ its distance from white ÷ that of the solid object next to it.
+      const rimAlpha = (k: number) => {
+        const x = k % w;
+        const y = (k - x) / w;
+        let ref = 0;
+        for (let dy = -3; dy <= 3; dy++) {
+          for (let dx = -3; dx <= 3; dx++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+            const n = ny * w + nx;
+            if (mark[n] === 0 || mark[n] === 3) ref = Math.max(ref, distFromWhite(n));
+          }
+        }
+        if (ref < tol * 1.5) return 1; // light object edge: keep it, there is nothing to separate
+        return Math.min(1, Math.max(0.05, distFromWhite(k) / ref));
+      };
+
       let minX = w, minY = h, maxX = -1, maxY = -1;
       for (let k = 0; k < w * h; k++) {
-        const strength = Math.min(1, distFromWhite(k) / (tol * 4));
-        const alpha = mark[k] === 1 ? 0 : mark[k] === 2 ? 0.35 + 0.65 * strength : mark[k] === 3 ? 0.75 + 0.25 * strength : 1;
+        const alpha = mark[k] === 1 ? 0 : mark[k] === 0 ? 1 : rimAlpha(k);
         px[k * 4 + 3] = Math.round(alpha * 255);
+        // De-matte the rim: its RGB is still blended with the white background,
+        // which would draw a light halo over the parchment. Remove the white.
+        if (alpha > 0 && alpha < 1) {
+          for (let c = 0; c < 3; c++) {
+            const v = (px[k * 4 + c] - 255 * (1 - alpha)) / alpha;
+            px[k * 4 + c] = Math.round(Math.min(255, Math.max(0, v)));
+          }
+        }
         if (alpha > 0) {
           const x = k % w;
           const y = (k - x) / w;
