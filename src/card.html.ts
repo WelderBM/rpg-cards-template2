@@ -9,6 +9,7 @@ import {
   FONTS,
   FOOTER_CELL_PADDING_PX,
   FOOTER_CELLS_MM,
+  FOOTER_EMPTY_VALUE,
   FRAME_PATHS,
   LINE_HEIGHT,
   PATHS,
@@ -116,21 +117,19 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
   // One cell per compartment PAINTED on the frame's footer scroll (the
   // dividers are part of the frame art, so no separators are drawn here);
   // icon + value centered in it, no label text — the icon conveys what the
-  // stat is. An empty valor ("") leaves that compartment blank in place, with
-  // no icon either (ammunition [Qtd, Carga, vazia]; potions without Resistência).
+  // stat is. An empty valor ("") shows FOOTER_EMPTY_VALUE ("–") with no icon
+  // (ammunition [Qtd, Carga, –]; potions without Resistência).
   const footerCells = FOOTER_CELLS_MM[side].map((span, i) => {
     const attr = resolveFooterAttr(card, i);
     const cell = boxToPx({ xMm: span.xMm, yMm: slots.footer.yMm, widthMm: span.widthMm, heightMm: slots.footer.heightMm });
-    const iconUrl = attr.icone ? fileUrl(path.join(PATHS.icons, attr.icone)) : "";
+    const isEmpty = attr.valor.trim() === "";
+    const iconUrl = attr.icone && !isEmpty ? fileUrl(path.join(PATHS.icons, attr.icone)) : "";
     // Width budget passed via data-max-width-px (not a wrapping box): the
     // value must shrink-wrap and sit centered right next to its icon; the
     // autofit still enforces this ceiling (measureFit's maxWidthOverride).
     const textWidthPx = cell.widthPx - FOOTER_CELL_PADDING_PX * 2 - (iconUrl ? footerIconPx + footerGapPx : 0);
-    const content =
-      attr.valor.trim() === ""
-        ? ""
-        : `${iconUrl ? `<img class="footer-icon" src="${iconUrl}" alt="" />` : ""}
-        <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}" data-max-width-px="${textWidthPx}">${escapeHtml(attr.valor)}</div>`;
+    const content = `${iconUrl ? `<img class="footer-icon" src="${iconUrl}" alt="" />` : ""}
+        <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}" data-max-width-px="${textWidthPx}">${escapeHtml(isEmpty ? FOOTER_EMPTY_VALUE : attr.valor)}</div>`;
     return `
       <div class="slot footer-cell" style="left:${cell.leftPx}px; top:${cell.topPx}px; width:${cell.widthPx}px; height:${cell.heightPx}px;">
         ${content}

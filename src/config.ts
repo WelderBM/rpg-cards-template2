@@ -251,6 +251,14 @@ export const FOOTER_CELL_PADDING_PX = 14;
  * since one line reads better at equal size.
  */
 export const FOOTER_WRAP_MIN_GAIN = 1.15;
+
+/**
+ * Shown (with no icon) in a footer cell whose valor is "" — e.g. a potion
+ * without Resistência, or the ammunition's 3rd cell. Owner's call
+ * (22/11/2026): "no espaço vazio coloque '-'". En dash, because a lone
+ * hyphen is a speck at footer size.
+ */
+export const FOOTER_EMPTY_VALUE = "–";
 /** In 2-line mode the footer font max is this fraction of FONTS.footerValue.maxPx (breathing room in the band). */
 export const FOOTER_WRAP_MAX_RATIO = 0.8;
 

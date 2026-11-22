@@ -158,7 +158,7 @@ entre arquivos é erro.
   "atributos": [                  // EXATAMENTE 3 entradas (uma por célula do rodapé)
     { "valor": "1d8" },            // arma: [Dano, Crítico, Carga]. poção: [Duração, Alvo/Área, Resistência]
     { "valor": "19x2" },           // icone/rotulo herdam de TYPE_FOOTER_DEFAULTS[tipo][i] se omitidos
-    { "valor": "1" }               // "" deixa a célula vazia
+    { "valor": "1" }               // "" mostra "–" (sem ícone) na célula
   ],
   "imagem": "assets/art/espada-longa.png", // caminho relativo à raiz; se o arquivo não existir, a janela da arte fica vazia (com aviso)
   "_fonte": "..."                 // opcional, só documentação (nunca é desenhado)
