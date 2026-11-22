@@ -3,3 +3,7 @@ dist/
 output/
 *.log
 .DS_Store
+
+# Chaves de API (ex.: GEMINI_API_KEY) — nunca commitar
+.env
+.env.*

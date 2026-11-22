@@ -1,5 +1,63 @@
 [
   {
+    "id": "curar-ferimentos-i",
+    "tipo": "pocao",
+    "titulo": "Curar Ferimentos I",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Essa poção canaliza luz que recupera 2d8+2 pontos de vida na criatura que tomou. Curar Ferimentos anula Infligir Ferimentos.",
+    "atributos": [
+      { "valor": "Instantânea" },
+      { "valor": "1 criatura" },
+      { "valor": "" }
+    ],
+    "imagem": "assets/art/pocao-cura.png"
+  },
+  {
+    "id": "adaga",
+    "tipo": "arma",
+    "titulo": "Adaga",
+    "subtitulo": "Arma",
+    "preco": "T$2",
+    "descricao": "Esta faca afiada é usada por muitos habitantes adultos do Reinado, embora seja favorita de ladrões e assassinos, por ser facilmente escondida (fornece +5 em testes de Ladinagem para ocultá-la). Quando ataca com uma adaga, você pode usar sua Destreza em vez de Força nos testes de ataque. Uma adaga pode ser arremessada.",
+    "atributos": [
+      { "valor": "1d4" },
+      { "valor": "19x2" },
+      { "valor": "1" }
+    ],
+    "imagem": "assets/art/adaga.png"
+  },
+  {
+    "id": "alabarda",
+    "tipo": "arma",
+    "titulo": "Alabarda",
+    "subtitulo": "Arma",
+    "preco": "T$10",
+    "descricao": "Uma haste de madeira com 2m de comprimento e uma lâmina de machado na ponta. A alabarda é uma arma alongada.",
+    "atributos": [
+      { "valor": "1d10" },
+      { "valor": "20x3" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/alabarda.png"
+  },
+  {
+    "id": "alfange",
+    "tipo": "arma",
+    "titulo": "Alfange",
+    "subtitulo": "Arma",
+    "preco": "T$75",
+    "descricao": "Uma versão maior da cimitarra, esta Espada de lâmina larga e curva é bastante usada por guerreiros do Deserto da Perdição.",
+    "atributos": [
+      { "valor": "2d4" },
+      { "valor": "18x2" },
+      { "valor": "2" }
+    ],
+    "imagem": "assets/art/alfange.png"
+  },
+  {
     "id": "arco-curto",
     "tipo": "arma",
     "titulo": "Arco Curto",
@@ -64,7 +122,7 @@
     "descricao": "Versão maior e mais potente da besta leve. Recarregar uma besta pesada é uma ação padrão.",
     "atributos": [
       { "valor": "1d12" },
-      { "valor": "12x2" },
+      { "valor": "19x2" },
       { "valor": "2" }
     ],
     "imagem": "assets/art/besta-pesada.png"
@@ -92,7 +150,7 @@
     "descricao": "Esta arma pode ser usada para atacar inimigos a até 4,5m e pode se enroscar nas mãos, pernas ou armas de seus adversários. O chicote é uma arma ágil e versátil, fornecendo +2 em testes para derrubar ou desarmar.",
     "atributos": [
       { "valor": "1d3" },
-      { "valor": "20x3" },
+      { "valor": "20x2" },
       { "valor": "1" }
     ],
     "imagem": "assets/art/chicote.png"
@@ -228,7 +286,7 @@
     "tipo": "arma",
     "titulo": "Gadanho",
     "subtitulo": "Arma",
-    "preco": "T$20",
+    "preco": "T$18",
     "descricao": "Outra ferramenta agrícola, o gadanho é uma versão maior da foice, para uso com as duas mãos. Foi criada para ceifar cereais, mas também pode ceifar vidas.",
     "atributos": [
       { "valor": "2d4" },
@@ -245,8 +303,8 @@
     "preco": "T$100",
     "descricao": "A espada tradicional do samurai tem lâmina levemente curva e apenas um gume. A katana é uma arma adaptável e ágil. É muito grande para ser empunhada com uma só mão sem treinamento especial; por isso, é uma arma exótica. Ela pode ser usada como uma arma marcial de duas mãos.",
     "atributos": [
-      { "valor": "1d10/1d8" },
-      { "valor": "20x2" },
+      { "valor": "1d10" },
+      { "valor": "19x2" },
       { "valor": "1" }
     ],
     "imagem": "assets/art/katana.png"
@@ -275,7 +333,7 @@
     "atributos": [
       { "valor": "1d8" },
       { "valor": "20x3" },
-      { "valor": "1" }
+      { "valor": "2" }
     ],
     "imagem": "assets/art/lanca-montada.png"
   },
@@ -516,5 +574,61 @@
       { "valor": "1" }
     ],
     "imagem": "assets/art/tridente.png"
+  },
+  {
+    "id": "balas",
+    "tipo": "item",
+    "titulo": "Balas",
+    "subtitulo": "Munição",
+    "preco": "T$20",
+    "descricao": "Uma bolsa com 20 balas (pequenas esferas de chumbo) e pólvora. Recarregar uma pistola ou um mosquete é uma ação padrão.",
+    "atributos": [
+      { "icone": "", "rotulo": "Qtd", "valor": "×20" },
+      { "icone": "weight.svg", "rotulo": "Carga", "valor": "1" },
+      { "icone": "", "rotulo": "", "valor": "" }
+    ],
+    "imagem": "assets/art/balas.png"
+  },
+  {
+    "id": "flechas",
+    "tipo": "item",
+    "titulo": "Flechas",
+    "subtitulo": "Munição",
+    "preco": "T$1",
+    "descricao": "Uma aljava com 20 flechas, hastes de madeira com ponta metálica e penas para estabilizar o voo. Recarregar um arco com uma flecha é uma ação livre.",
+    "atributos": [
+      { "icone": "", "rotulo": "Qtd", "valor": "×20" },
+      { "icone": "weight.svg", "rotulo": "Carga", "valor": "1" },
+      { "icone": "", "rotulo": "", "valor": "" }
+    ],
+    "imagem": "assets/art/flechas.png"
+  },
+  {
+    "id": "pedras",
+    "tipo": "item",
+    "titulo": "Pedras",
+    "subtitulo": "Munição",
+    "preco": "T$0,5",
+    "descricao": "Um saco de couro com 20 pedras polidas. Recarregar uma funda com uma pedra de qualquer tipo é uma ação de movimento.",
+    "atributos": [
+      { "icone": "", "rotulo": "Qtd", "valor": "×20" },
+      { "icone": "weight.svg", "rotulo": "Carga", "valor": "1" },
+      { "icone": "", "rotulo": "", "valor": "" }
+    ],
+    "imagem": "assets/art/pedras.png"
+  },
+  {
+    "id": "virotes",
+    "tipo": "item",
+    "titulo": "Virotes",
+    "subtitulo": "Munição",
+    "preco": "T$2",
+    "descricao": "Uma aljava com 20 setas de madeira. Recarregar uma besta leve é uma ação de movimento; já recarregar uma besta pesada é uma ação padrão.",
+    "atributos": [
+      { "icone": "", "rotulo": "Qtd", "valor": "×20" },
+      { "icone": "weight.svg", "rotulo": "Carga", "valor": "1" },
+      { "icone": "", "rotulo": "", "valor": "" }
+    ],
+    "imagem": "assets/art/virotes.png"
   }
 ]

@@ -1,8 +1,20 @@
 {
     "cards-to-repeat": [
         {
-            "id": "id-exemplo",
-            "times-to-repeat": 3
+            "id": "balas",
+            "times-to-repeat": 2
+        },
+        {
+            "id": "flechas",
+            "times-to-repeat": 2
+        },
+        {
+            "id": "pedras",
+            "times-to-repeat": 2
+        },
+        {
+            "id": "virotes",
+            "times-to-repeat": 2
         }
     ]
 }

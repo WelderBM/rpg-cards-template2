@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
@@ -6,7 +7,8 @@ import {
   CANVAS_WIDTH_PX,
   type CoinSide,
   FONTS,
-  FOOTER_CELL_COUNT,
+  FOOTER_CELL_PADDING_PX,
+  FOOTER_CELLS_MM,
   FRAME_PATHS,
   LINE_HEIGHT,
   PATHS,
@@ -94,44 +96,53 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
   const artBox = boxToPx(slots.art);
   const descBox = boxToPx(slots.description);
   const priceBox = boxToPx(slots.price);
-  const footerBox = boxToPx(slots.footer);
+  const circleSealBox = boxToPx(slots.circleSeal);
 
-  const artUrl = fileUrl(path.join(ROOT_DIR, card.imagem));
+  // Missing art file → leave the art window as plain parchment. Rendering the
+  // <img> anyway printed Chromium's broken-image icon + grey border on the
+  // card (and in the print PDFs). validateCards warns about these cards.
+  const artPath = path.join(ROOT_DIR, card.imagem);
+  const artUrl = existsSync(artPath) ? fileUrl(artPath) : null;
   const frameUrl = fileUrl(FRAME_PATHS[side]);
 
-  // One flat row: icon + value (no label text — the icon conveys what the
-  // stat is), pairs separated by a plain "|" — no boxes/dividers, matching
-  // the reference (text sits directly on the parchment, not in bordered cells).
   // Fixed budget reserved for the two flourish glyphs flanking the subtitle,
   // so the subtitle's own fit-measurement wrapper has a real (non-shrink-wrap) width.
   const subtitleFlourishBudgetPx = 40;
   const subtitleTextWidthPx = titleBox.widthPx - TEXT_SAFE_PADDING_PX * 2 - subtitleFlourishBudgetPx * 2;
 
-  const footerSeparatorPx = 16;
-  const cellWidthPx = Math.floor(
-    (footerBox.widthPx - footerSeparatorPx * (FOOTER_CELL_COUNT - 1)) / FOOTER_CELL_COUNT,
-  );
   const footerIconPx = 22;
   const footerGapPx = 6;
-  // Width budget passed to the value via data-max-width-px (not a wrapping
-  // box) — the value must shrink-wrap and sit centered right next to its
-  // icon, not float inside an oversized invisible box (that left-shifted the
-  // whole icon+value pair visually). The autofit measurement still enforces
-  // this ceiling; see measureFit's maxWidthOverride in render.ts.
-  const footerTextWidthPx = cellWidthPx - footerIconPx - footerGapPx - TEXT_SAFE_PADDING_PX * 2;
 
-  const footerCells = Array.from({ length: FOOTER_CELL_COUNT }, (_, i) => {
+  // One cell per compartment PAINTED on the frame's footer scroll (the
+  // dividers are part of the frame art, so no separators are drawn here);
+  // icon + value centered in it, no label text — the icon conveys what the
+  // stat is. An empty valor ("") leaves that compartment blank in place, with
+  // no icon either (ammunition [Qtd, Carga, vazia]; potions without Resistência).
+  const footerCells = FOOTER_CELLS_MM[side].map((span, i) => {
     const attr = resolveFooterAttr(card, i);
+    const cell = boxToPx({ xMm: span.xMm, yMm: slots.footer.yMm, widthMm: span.widthMm, heightMm: slots.footer.heightMm });
     const iconUrl = attr.icone ? fileUrl(path.join(PATHS.icons, attr.icone)) : "";
-    const separator = i < FOOTER_CELL_COUNT - 1 ? `<span class="footer-separator"></span>` : "";
+    // Width budget passed via data-max-width-px (not a wrapping box): the
+    // value must shrink-wrap and sit centered right next to its icon; the
+    // autofit still enforces this ceiling (measureFit's maxWidthOverride).
+    const textWidthPx = cell.widthPx - FOOTER_CELL_PADDING_PX * 2 - (iconUrl ? footerIconPx + footerGapPx : 0);
+    const content =
+      attr.valor.trim() === ""
+        ? ""
+        : `${iconUrl ? `<img class="footer-icon" src="${iconUrl}" alt="" />` : ""}
+        <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}" data-max-width-px="${textWidthPx}">${escapeHtml(attr.valor)}</div>`;
     return `
-      <div class="footer-cell" style="width:${cellWidthPx}px;">
-        ${iconUrl ? `<img class="footer-icon" src="${iconUrl}" alt="" />` : ""}
-        <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}" data-max-width-px="${footerTextWidthPx}">${escapeHtml(attr.valor)}</div>
-      </div>
-      ${separator}
-    `;
+      <div class="slot footer-cell" style="left:${cell.leftPx}px; top:${cell.topPx}px; width:${cell.widthPx}px; height:${cell.heightPx}px;">
+        ${content}
+      </div>`;
   }).join("\n");
+
+  const circleSeal =
+    card.tipo === "pocao"
+      ? `<div class="slot circle-seal-slot">
+    <div id="circle-seal-text" class="circle-seal-text" data-autofit="single" data-min="${FONTS.circleSeal.minPx}" data-max="${FONTS.circleSeal.maxPx}">${card.circulo}º</div>
+  </div>`
+      : "";
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -221,6 +232,35 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     line-height: 1;
   }
 
+  .circle-seal-slot {
+    left: ${circleSealBox.leftPx}px;
+    top: ${circleSealBox.topPx}px;
+    width: ${circleSealBox.widthPx}px;
+    height: ${circleSealBox.heightPx}px;
+    border-radius: 50%;
+    padding: ${TEXT_SAFE_PADDING_PX}px;
+    border: 3px solid #4c1714;
+    background: radial-gradient(circle at 35% 28%, #ad5145 0%, #812c28 48%, #5b1b18 100%);
+    box-shadow: 2px 3px 5px rgba(43, 26, 13, 0.45), inset 0 0 0 3px rgba(238, 194, 104, 0.42);
+  }
+  .circle-seal-slot::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px solid rgba(255, 224, 151, 0.65);
+    border-radius: 50%;
+  }
+  .circle-seal-text {
+    font-family: "Cinzel", serif;
+    font-weight: ${FONTS.circleSeal.weight};
+    font-variation-settings: "wght" ${FONTS.circleSeal.weight};
+    color: #ffe5a7;
+    line-height: 1;
+    white-space: nowrap;
+    text-shadow: 0 1px 1px rgba(43, 13, 10, 0.8);
+    z-index: 1;
+  }
+
   .description-slot {
     left: ${descBox.leftPx}px;
     top: ${descBox.topPx}px;
@@ -240,22 +280,13 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     word-break: break-word;
   }
 
-  .footer-slot {
-    left: ${footerBox.leftPx}px;
-    top: ${footerBox.topPx}px;
-    width: ${footerBox.widthPx}px;
-    height: ${footerBox.heightPx}px;
-  }
   .footer-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    height: 100%;
+    gap: ${footerGapPx}px;
+    padding: 0 ${FOOTER_CELL_PADDING_PX}px;
   }
   .footer-icon {
-    width: 22px;
-    height: 22px;
+    width: ${footerIconPx}px;
+    height: ${footerIconPx}px;
     flex-shrink: 0;
   }
   .footer-pair {
@@ -264,27 +295,19 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     color: #2b1a0d;
     white-space: nowrap;
   }
-  .footer-separator {
-    display: inline-block;
-    width: ${footerSeparatorPx}px;
-    flex-shrink: 0;
-    position: relative;
-  }
-  .footer-separator::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 15%;
-    bottom: 15%;
-    width: 1px;
-    background: rgba(43, 26, 13, 0.35);
+  /* Fallback set by render.ts when a value can't fit one line even at the
+     minimum size (e.g. "Vontade parcial" in the narrow 3rd compartment). */
+  .footer-pair.footer-wrap {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.05;
   }
 </style>
 </head>
 <body>
   <img class="layer" src="${frameUrl}" alt="" />
   <div class="layer art-layer">
-    <img class="art-image" src="${artUrl}" alt="" />
+    ${artUrl ? `<img class="art-image" src="${artUrl}" alt="" />` : ""}
   </div>
 
   <div class="slot title-slot">
@@ -307,13 +330,13 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     <div class="price-text" data-autofit="single" data-min="${FONTS.price.minPx}" data-max="${FONTS.price.maxPx}">${escapeHtml(card.preco)}</div>
   </div>
 
+  ${circleSeal}
+
   <div class="slot description-slot">
     <div class="description-text" data-autofit="multi" data-min="${FONTS.description.minPx}" data-max="${FONTS.description.maxPx}" data-lh-min="${LINE_HEIGHT.min}" data-lh-max="${LINE_HEIGHT.max}">${escapeHtml(card.descricao)}</div>
   </div>
 
-  <div class="slot footer-slot">
-    ${footerCells}
-  </div>
+  ${footerCells}
 </body>
 </html>`;
 }

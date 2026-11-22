@@ -21,7 +21,7 @@ import type { CardsToRepeatFile } from "./types.js";
  * repeats). Each entry's "times-to-repeat" is the TOTAL number of copies to
  * print for that card id (not additional on top of the default 1).
  */
-async function loadRepeatCounts(cardIdsInOrder: string[]): Promise<Map<string, number>> {
+async function loadRepeatCounts(cardIdsInOrder: string[], catalogIds: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   let raw: string;
   try {
@@ -32,7 +32,8 @@ async function loadRepeatCounts(cardIdsInOrder: string[]): Promise<Map<string, n
   }
 
   const parsed: CardsToRepeatFile = JSON.parse(raw);
-  const knownIds = new Set(cardIdsInOrder);
+  const knownIds = new Set(catalogIds);
+  const inThisBuild = new Set(cardIdsInOrder);
   for (const entry of parsed["cards-to-repeat"] ?? []) {
     if (!knownIds.has(entry.id)) {
       console.warn(
@@ -40,6 +41,8 @@ async function loadRepeatCounts(cardIdsInOrder: string[]): Promise<Map<string, n
       );
       continue;
     }
+    // Real card, just not selected by `pnpm build -- --ids=...`: nothing to repeat.
+    if (!inThisBuild.has(entry.id)) continue;
     counts.set(entry.id, entry["times-to-repeat"]);
   }
   return counts;
@@ -144,10 +147,22 @@ function drawCropMarks(page: import("pdf-lib").PDFPage): void {
  * "times-to-repeat" copy count (grouped together, in cards.json order)
  * before being split into sheets.
  */
-export async function imposeToPdf(cardIdsInOrder: string[]): Promise<string[]> {
+/**
+ * @param cardIdsInOrder cards going into THIS print run (all of them, or a `--ids=` selection)
+ * @param catalogIds every id in data/cards.json — used only to tell a typo'd repeat entry
+ *   (warned) apart from a real card that simply isn't in this run (skipped quietly)
+ */
+export async function imposeToPdf(cardIdsInOrder: string[], catalogIds: string[] = cardIdsInOrder): Promise<string[]> {
   await fs.mkdir(PATHS.outputPrint, { recursive: true });
 
-  const repeatCounts = await loadRepeatCounts(cardIdsInOrder);
+  // Sheets are numbered from 1 on every run: without this, a smaller run
+  // (e.g. 1 sheet) would leave sheet-2..N of a previous, larger run sitting
+  // next to it, mixing two print batches in the same folder.
+  for (const name of await fs.readdir(PATHS.outputPrint)) {
+    if (/^sheet-\d+\.pdf$/.test(name)) await fs.rm(path.join(PATHS.outputPrint, name));
+  }
+
+  const repeatCounts = await loadRepeatCounts(cardIdsInOrder, catalogIds);
   const expandedIds = expandWithRepeats(cardIdsInOrder, repeatCounts);
   if (repeatCounts.size > 0) {
     console.log(

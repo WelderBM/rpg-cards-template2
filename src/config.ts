@@ -134,8 +134,22 @@ export const SLOTS = {
   /** Price coin: hangs below the title scroll into the open area, not glued to the top edge. */
   price: { xMm: 52, yMm: 22.5, widthMm: 17, heightMm: 17 } as BoxMm,
 
-  /** Footer strip with 3 attribute cells — its own small scroll below the description band. */
-  footer: { xMm: 5, yMm: 94, widthMm: 64, heightMm: 9 } as BoxMm,
+  /**
+   * Potion spell-circle seal: hangs right below the price coin, centered on
+   * the same vertical axis (price box center = 60.5mm), in the side rail the
+   * art window already leaves free for the coin (art ends at x=51mm, so this
+   * never touches the art). The opposite rail is only ~11mm wide including
+   * the torn border — a legible seal there would cut into the art window.
+   */
+  circleSeal: { xMm: 55, yMm: 40.5, widthMm: 11, heightMm: 11 } as BoxMm,
+
+  /**
+   * Footer scroll below the description band: the flat band between the
+   * shadows of its two end rolls. Only its y/height drive the layout — the
+   * three cells' horizontal spans come from FOOTER_CELLS_MM (per frame side),
+   * because the dividers between them are painted in the frame art.
+   */
+  footer: { xMm: 10.2, yMm: 94, widthMm: 52.4, heightMm: 9 } as BoxMm,
 } as const;
 
 export interface BoxPx {
@@ -179,7 +193,8 @@ function mirrorPriceBoxMm(box: BoxMm): BoxMm {
  * away from the coin, keeping a deliberate ~1mm clearance from it); mirroring
  * only the price and leaving art in place would collide the art box into
  * the coin on the left-coin frame. Mirroring symmetric boxes (title,
- * description, footer) is a no-op, so this is safe to apply uniformly.
+ * description) is a no-op. Exceptions: the circle seal follows the coin's
+ * nudge, and the footer is not mirrored at all (see FOOTER_CELLS_MM).
  */
 export function getSlotsForSide(side: CoinSide): typeof SLOTS {
   if (side === "right") return SLOTS;
@@ -188,12 +203,56 @@ export function getSlotsForSide(side: CoinSide): typeof SLOTS {
     art: mirrorBoxMm(SLOTS.art),
     description: mirrorBoxMm(SLOTS.description),
     price: mirrorPriceBoxMm(SLOTS.price),
-    footer: mirrorBoxMm(SLOTS.footer),
+    // Anchored to the coin, so it takes the coin's mirror nudge too.
+    circleSeal: mirrorPriceBoxMm(SLOTS.circleSeal),
+    // NOT mirrored: both frames draw the footer scroll at the same place
+    // (rolls at ~10–62.5mm on each); only its painted dividers differ — see FOOTER_CELLS_MM.
+    footer: SLOTS.footer,
   };
 }
 
+/**
+ * The footer scroll has two dividers PAINTED in the frame art, splitting it
+ * into three compartments; each footer value is centered in its compartment.
+ * Measured on the frame PNGs scaled to the 874×1240 canvas (darkest narrow
+ * columns across the scroll's mid-band; outer edges = where the end rolls'
+ * shadow starts). The frames are not mirror images here — the dividers sit at
+ * 28.4/49.9mm on frame-right but 26.2/48.5mm on frame-left — so each side
+ * has its own spans. Re-measure if either frame PNG changes.
+ */
+export const FOOTER_CELLS_MM: Record<CoinSide, readonly { xMm: number; widthMm: number }[]> = {
+  right: [
+    { xMm: 10.2, widthMm: 18.2 },
+    { xMm: 28.4, widthMm: 21.5 },
+    { xMm: 49.9, widthMm: 12.7 },
+  ],
+  left: [
+    { xMm: 9.9, widthMm: 16.3 },
+    { xMm: 26.2, widthMm: 22.3 },
+    { xMm: 48.5, widthMm: 14.0 },
+  ],
+};
+
 /** Padding subtracted from every slot's box before text is allowed to sit, in px. */
 export const TEXT_SAFE_PADDING_PX = 6;
+
+/**
+ * Horizontal breathing room inside each footer compartment (FOOTER_CELLS_MM),
+ * in px per side. Larger than TEXT_SAFE_PADDING_PX because the compartment
+ * edges are painted dividers / roll shadows: at 6px (and still at 10px) a
+ * value that filled the narrow third compartment ("1 criatura") looked glued
+ * to the divider. 14px ≈ 1.2mm printed.
+ */
+export const FOOTER_CELL_PADDING_PX = 14;
+
+/**
+ * Footer values with a space may wrap into 2 centered lines (render.ts
+ * fitFooterValue) — only when that beats one line's font size by this factor,
+ * since one line reads better at equal size.
+ */
+export const FOOTER_WRAP_MIN_GAIN = 1.15;
+/** In 2-line mode the footer font max is this fraction of FONTS.footerValue.maxPx (breathing room in the band). */
+export const FOOTER_WRAP_MAX_RATIO = 0.8;
 
 /** Art gets extra breathing room from the scrolls above/below it, in px. */
 export const ART_SAFE_PADDING_PX = 10;
@@ -255,6 +314,13 @@ export const FONTS = {
     minPx: 18,
     maxPx: 34,
   },
+  circleSeal: {
+    family: "Cinzel",
+    file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
+    weight: 700,
+    minPx: 20,
+    maxPx: 46,
+  },
   footerValue: {
     family: "Cinzel",
     file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
@@ -305,10 +371,13 @@ export const TYPE_FOOTER_DEFAULTS: Record<CardType, FooterAttrDefault[]> = {
     { icone: "star-formation.svg", rotulo: "Raridade" },
     { icone: "coins.svg", rotulo: "Custo" },
   ],
+  // Approved 22/11/2026. Potions have no weight. The kind (Poção/Óleo/Granada)
+  // is the subtitle. No icon exists yet for Alvo/Área or Resistência, and an
+  // empty Resistência ("") leaves its compartment blank.
   pocao: [
-    { icone: "potion-ball.svg", rotulo: "Efeito" },
     { icone: "hourglass.svg", rotulo: "Duração" },
-    { icone: "weight.svg", rotulo: "Peso" },
+    { icone: "", rotulo: "Alvo/Área" },
+    { icone: "", rotulo: "Resistência" },
   ],
 };
 

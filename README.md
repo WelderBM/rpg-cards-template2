@@ -42,20 +42,23 @@ com caixas coloridas mostrando cada slot — isso NÃO é arte aprovada.
 
 ### 2. `pnpm test` — comparação rápida (não é o lote final)
 
-Renderiza **uma única carta de exemplo** (a primeira de `data/cards.json`)
-nos dois lados possíveis da moeda, para `output/test/`:
+Renderiza as cartas de amostra nos dois lados possíveis da moeda, em
+`output/test/{id}-moeda-direita.png` e `{id}-moeda-esquerda.png`:
 
-- `exemplo-moeda-direita.png`
-- `exemplo-moeda-esquerda.png`
+```bash
+pnpm test                     # as 2 poções de amostra: curar-ferimentos-i + "sono" (texto longo, só de teste)
+pnpm test -- flechas katana   # qualquer carta do catálogo, pelo id
+```
 
-Não toca em `output/cards/` nem `output/print/`. É só pra decidir/conferir
-visualmente qual frame usar antes de rodar o lote de verdade.
+Não toca em `output/cards/` nem `output/print/`. É só pra conferir
+visualmente antes de rodar o lote de verdade.
 
 ### 3. `pnpm build` — gerar o lote definitivo
 
-Renderiza cada carta de `data/cards.json` em `output/cards/{id}.png` e monta
-as folhas de impressão A4 (8 cartas A7 por folha, com marcas de corte) em
-`output/print/sheet-{n}.pdf`.
+Renderiza cada carta do catálogo (`data/cards.json` + `data/pocoes-*.json`)
+em `output/cards/{id}.png` e monta as folhas de impressão A4 (8 cartas A7 por
+folha, com marcas de corte) em `output/print/sheet-{n}.pdf`. As folhas do
+build anterior são apagadas antes.
 
 Como o frame existe em duas versões espelhadas (moeda à esquerda ou à
 direita — veja abaixo), essa é a build **definitiva** e sempre exige escolher
@@ -65,6 +68,7 @@ um lado:
 pnpm build -- right          # ou: pnpm build -- left
 pnpm build -- --side=left    # forma alternativa, mesma coisa
 pnpm build                   # sem argumento: pergunta interativamente no terminal
+pnpm build -- right --ids=balas,flechas   # só essas cartas (o catálogo inteiro continua validado)
 ```
 
 Se o texto de alguma carta não couber em um slot mesmo no tamanho mínimo de
@@ -136,24 +140,37 @@ Tudo que é calibrável vive em `src/config.ts`:
   marcas de corte na posição correta — mas sacrifica o encaixe perfeito
   8-up (0 folga) da folha A4.
 
-## Formato de `data/cards.json`
+## Formato dos dados
+
+O catálogo é `data/cards.json` mais todo arquivo `data/pocoes-*.json` (ex.:
+`data/pocoes-1-circulo.json`, com os textos literais da mestre). Todos são
+arrays de cartas no mesmo formato e são validados juntos; um `id` repetido
+entre arquivos é erro.
 
 ```jsonc
 {
   "id": "espada-longa",           // único, usado no nome do arquivo de saída
   "tipo": "arma",                 // "arma" | "item" | "pocao" — controla os ícones/ordem padrão do rodapé
   "titulo": "Espada Longa",
-  "subtitulo": "Arma",            // opcional, aparece abaixo do título com florões
-  "preco": "T$75",                // vai na moeda
-  "descricao": "Uma lâmina reta e equilibrada...",
+  "subtitulo": "Arma",            // opcional (obrigatório em poção: "Poção" | "Óleo" | "Granada")
+  "preco": "T$15",                // vai na moeda
+  "descricao": "Arma típica de soldados e guerreiros...",
   "atributos": [                  // EXATAMENTE 3 entradas (uma por célula do rodapé)
-    { "valor": "1d8" },            // arma: [Dano, Crítico, Peso]. poção: [Efeito, Duração, Peso].
+    { "valor": "1d8" },            // arma: [Dano, Crítico, Carga]. poção: [Duração, Alvo/Área, Resistência]
     { "valor": "19x2" },           // icone/rotulo herdam de TYPE_FOOTER_DEFAULTS[tipo][i] se omitidos
-    { "valor": "1.5kg" }
+    { "valor": "1" }               // "" deixa a célula vazia
   ],
-  "imagem": "assets/art/espada-longa.png" // caminho relativo à raiz do projeto
+  "imagem": "assets/art/espada-longa.png", // caminho relativo à raiz; se o arquivo não existir, a janela da arte fica vazia (com aviso)
+  "_fonte": "..."                 // opcional, só documentação (nunca é desenhado)
 }
 ```
+
+Poções (`"tipo": "pocao"`) também exigem `"circulo"` (1 a 5, vira o selo
+abaixo da moeda) e `"pm"` (custo em PM). O build avisa, sem falhar, se o
+preço não for T$30 × pm². O círculo nunca é deduzido do preço.
+
+Quando o material da mesa diverge do livro Tormenta20, vale o livro; valor
+duplo do livro ("1d10/1d12") → a carta mostra o maior.
 
 ### `data/cards-to-reapeat.json` — repetir cartas na impressão
 
@@ -204,5 +221,7 @@ cartas, então não precisam de marca separada.
 - **Frame** (`assets/frame/frame-right.png` / `frame-left.png`): arte
   aprovada, gerada com auxílio de IA (Canva) a partir da referência em
   `assets/inspiration/exemplo-carta-pronta.jpg`.
-- **Arte dos itens**: a maioria das cartas em `data/cards.json` ainda não tem
-  arte própria em `assets/art/` — falta gerar/adicionar por item.
+- **Arte dos itens**: a maioria das cartas ainda não tem arte própria em
+  `assets/art/`. Direção decidida: arte gerada por IA, de forma automatizada,
+  no estilo da referência (`assets/inspiration/exemplo-carta-pronta.jpg`). Os
+  ícones atuais são provisórios.
