@@ -38,6 +38,11 @@ export async function syncToDrive(): Promise<void> {
   loadDotEnv();
   const root = process.env.DRIVE_SYNC_DIR;
   if (!root) return;
+  // "D:pasta" (no slash after the drive) is relative to D:'s current folder on
+  // Windows: the copy would land somewhere else entirely. Absolute paths only.
+  if (!path.isAbsolute(root) || /^[A-Za-z]:(?![\\/])/.test(root)) {
+    throw new Error(`DRIVE_SYNC_DIR precisa ser um caminho absoluto (ex.: D:/.../Cartas RPG), veio "${root}".`);
+  }
   if (!existsSync(path.dirname(root))) {
     console.error(
       `\n!!! DRIVE NÃO SINCRONIZADO: ${path.dirname(root)} não está acessível (o app do Google Drive está aberto e logado?).` +
