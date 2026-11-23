@@ -17,10 +17,13 @@ pnpm build -- left                      # same, using the left-coin mirrored fra
 pnpm build -- --side=left               # --side=<left|right> flag form also accepted
 pnpm build -- right --ids=balas,flechas # partial batch: only these cards (whole catalog still validated; comma or space separated)
 pnpm build                              # prompts interactively for the side if none is given — never guesses
+pnpm sync-print                         # mirror output/print/ into PRINT_SYNC_DIR (Google Drive folder) without building
 pnpm dev -- left                        # watch mode (data/, src/, assets/frame/); optional side, defaults to right, never prompts
 pnpm art                                # AI item art (Gemini) for every id in data/art-prompts.json without assets/art/{id}.png
 pnpm art -- sono --variacoes=3          # 3 candidates + card previews in output/arte/; pick with: pnpm art -- --aprovar=sono:2
 ```
+
+**Drive mirror (owner's hard rule, 22/11/2026)**: every change to `output/print/` must reach the Google Drive folder "Cartas RPG - print". `pnpm build` does it at the end (`src/sync.ts`) when `PRINT_SYNC_DIR` is set in `.env` (the Google Drive for Desktop path): copies changed sheets, removes sheets that no longer exist. If the build prints `!!! DRIVE NÃO SINCRONIZADO`, the Drive app is closed or logged out — get it open and run `pnpm sync-print`; never leave the Drive stale. Sheets carry no PDF dates, so an unchanged sheet is byte-identical and isn't re-uploaded.
 
 `pnpm art` needs `GEMINI_API_KEY` in the environment or in `.env` (git-ignored; never commit it). It asks for the object on a pure white background, then flood-fills the background from the image edges to transparent and trims, so the card's drop-shadow follows the object's outline. It never uses a reference image: the current Gemini image models treat a reference as an object to include, not as a style. The style lives in the text of `data/art-prompts.json` (`estilo`, `evitar`, `itens[id]`).
 

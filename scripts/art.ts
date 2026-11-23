@@ -19,13 +19,14 @@
  * GEMINI_IMAGE_MODEL, default below. Card texts never come from here — this
  * only draws the picture.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium, type Page } from "playwright";
 import { loadCatalog } from "../src/catalog.js";
 import { PATHS, ROOT_DIR } from "../src/config.js";
+import { loadDotEnv } from "../src/env.js";
 import { renderSingleCard } from "../src/render.js";
 import type { Card, CardType } from "../src/types.js";
 
@@ -73,16 +74,6 @@ interface ArtPrompts {
   estilos?: Partial<Record<CardType, string>>;
   evitar_por_tipo?: Partial<Record<CardType, string>>;
   itens: Record<string, string>;
-}
-
-/** Minimal .env reader (KEY=VALUE lines); real environment variables win. */
-function loadDotEnv(): void {
-  const file = path.join(ROOT_DIR, ".env");
-  if (!existsSync(file)) return;
-  for (const line of readFileSync(file, "utf-8").split(/\r?\n/)) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-    if (m && process.env[m[1]] === undefined) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
-  }
 }
 
 function buildPrompt(prompts: ArtPrompts, id: string, tipo: CardType | undefined): string {

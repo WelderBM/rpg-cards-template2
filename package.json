@@ -9,7 +9,8 @@
     "test": "tsx scripts/test.ts",
     "dev": "tsx scripts/dev.ts",
     "typecheck": "tsc --noEmit",
-    "art": "tsx scripts/art.ts"
+    "art": "tsx scripts/art.ts",
+    "sync-print": "tsx src/sync.ts"
   },
   "dependencies": {
     "chokidar": "^3.6.0",

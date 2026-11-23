@@ -82,7 +82,9 @@ function cellCenterFromTopLeftMm(col: number, row: number): { xMm: number; yFrom
 }
 
 async function buildSheet(cardPngPaths: (string | null)[]): Promise<Uint8Array> {
-  const pdfDoc = await PDFDocument.create();
+  // No creation/modification date: the same cards give byte-identical sheets,
+  // so the Drive sync (src/sync.ts) only re-uploads sheets that really changed.
+  const pdfDoc = await PDFDocument.create({ updateMetadata: false });
   const page = pdfDoc.addPage([mmToPt(SHEET_WIDTH_MM), mmToPt(SHEET_HEIGHT_MM)]);
 
   for (let i = 0; i < cardPngPaths.length; i++) {
