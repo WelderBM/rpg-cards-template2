@@ -183,8 +183,10 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     font-variation-settings: "wght" ${FONTS.title.weight};
     white-space: nowrap;
     text-align: center;
-    color: #2b1a0d;
+    /* Warm sepia ink sampled from the reference title, with a faint light edge so it reads as pressed into the scroll. */
+    color: #3a1f08;
     letter-spacing: 0.02em;
+    text-shadow: 0 1px 0 rgba(255, 238, 196, 0.55);
   }
   .subtitle-text {
     font-family: "Cinzel", serif;
@@ -270,7 +272,8 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
   }
   .description-text {
     font-family: "Lora", serif;
-    font-style: italic;
+    /* Upright, like the approved reference: rules text is read, not glanced at. */
+    font-style: normal;
     font-weight: ${FONTS.description.weight};
     width: 100%;
     text-align: center;

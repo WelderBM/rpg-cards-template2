@@ -122,11 +122,15 @@ export interface BoxMm {
 // re-measure before touching these numbers.
 
 export const SLOTS = {
-  /** Title band (top scroll). */
-  title: { xMm: 8, yMm: 5, widthMm: 58, heightMm: 13 } as BoxMm,
+  /** Title band: only the flat part of the top scroll (its rolls' inner edges sit at ~10.6/62.2mm on both frames). */
+  title: { xMm: 11.5, yMm: 5, widthMm: 51, heightMm: 13 } as BoxMm,
 
-  /** Item artwork window (center). */
-  art: { xMm: 11, yMm: 20, widthMm: 40, heightMm: 40 } as BoxMm,
+  /**
+   * Item artwork window = the free space between the title scroll, the
+   * description scroll, the left rail and the coin column (right edge 1mm clear
+   * of the coin). object-fit: contain centers the object in that space.
+   */
+  art: { xMm: 6.5, yMm: 21, widthMm: 44.5, heightMm: 48 } as BoxMm,
 
   /** Description band (bottom scroll). */
   description: { xMm: 7, yMm: 74, widthMm: 60, heightMm: 21 } as BoxMm,
