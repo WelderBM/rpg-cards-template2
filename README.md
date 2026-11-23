@@ -108,7 +108,9 @@ GEMINI_API_KEY=<sua chave>
 
 ## Lado da moeda (frame espelhado)
 
-O frame aprovado existe em duas versões, espelhadas horizontalmente:
+O frame aprovado existe em duas versões, espelhadas horizontalmente. Desde a v2
+(22/11/2026, pergaminho da descrição mais alto), `frame-left.png` é a arte
+pintada e `frame-right.png` é o espelho exato dela:
 
 - `assets/frame/frame-right.png` — moeda de preço no canto superior direito.
 - `assets/frame/frame-left.png` — moeda no canto superior esquerdo.
@@ -121,8 +123,9 @@ escolhem qual frame carregar através desse mesmo mecanismo.
 
 ## Como trocar o frame
 
-1. Substitua `assets/frame/frame-right.png` (e opcionalmente `frame-left.png`,
-   sua versão espelhada) pela arte aprovada do pergaminho.
+1. Substitua `assets/frame/frame-left.png` pela arte aprovada do pergaminho e
+   gere `frame-right.png` como o espelho horizontal exato dela. Depois meça de
+   novo `SLOTS` e `FOOTER_CELLS_MM` (`src/config.ts`) em cima de um render.
    - O frame é **totalmente opaco** — a arte do item é desenhada **por cima**
      dele (com uma sombra própria), não atrás de uma janela recortada. As
      faixas de título/descrição/rodapé já vêm no próprio PNG; o texto é

@@ -32,9 +32,10 @@ export const PATHS = {
 };
 
 // ---------------------------------------------------------------------------
-// Coin side: the frame comes in two mirrored variants (price coin top-right
-// vs top-left). Picking a side selects both the frame image AND mirrors
-// SLOTS.price horizontally — see FRAME_PATHS / getPriceSlot below.
+// Coin side: the frame comes in two variants (price coin top-right vs
+// top-left). frame-left.png is the painted original (v2, 22/11/2026: taller
+// description scroll); frame-right.png is its exact horizontal mirror, so
+// getSlotsForSide() mirrors every box with no manual nudge.
 // ---------------------------------------------------------------------------
 
 export type CoinSide = "left" | "right";
@@ -127,25 +128,29 @@ export const SLOTS = {
 
   /**
    * Item artwork window = the free space between the title scroll, the
-   * description scroll, the left rail and the coin column (right edge 1mm clear
-   * of the coin). object-fit: contain centers the object in that space.
+   * description scroll (its top edge is at 64.7mm), the left rail and the coin
+   * column (right edge 1mm clear of the coin). object-fit: contain centers the
+   * object in that space.
    */
-  art: { xMm: 6.5, yMm: 21, widthMm: 44.5, heightMm: 48 } as BoxMm,
+  art: { xMm: 6.5, yMm: 21, widthMm: 45.5, heightMm: 42.5 } as BoxMm,
 
-  /** Description band (bottom scroll). */
-  description: { xMm: 7, yMm: 74, widthMm: 60, heightMm: 21 } as BoxMm,
- 
+  /**
+   * Description band: the flat part of the tall bottom scroll (frame v2:
+   * scroll top edge 64.7mm, was 72.1mm — +7.4mm of text height).
+   */
+  description: { xMm: 7, yMm: 66.6, widthMm: 60, heightMm: 27.8 } as BoxMm,
+
   /** Price coin: hangs below the title scroll into the open area, not glued to the top edge. */
-  price: { xMm: 52, yMm: 22.5, widthMm: 17, heightMm: 17 } as BoxMm,
+  price: { xMm: 53, yMm: 23.5, widthMm: 17, heightMm: 17 } as BoxMm,
 
   /**
    * Potion spell-circle seal: hangs right below the price coin, centered on
-   * the same vertical axis (price box center = 60.5mm), in the side rail the
-   * art window already leaves free for the coin (art ends at x=51mm, so this
+   * the same vertical axis (price box center = 61.5mm), in the side rail the
+   * art window already leaves free for the coin (art ends at x=52mm, so this
    * never touches the art). The opposite rail is only ~11mm wide including
    * the torn border — a legible seal there would cut into the art window.
    */
-  circleSeal: { xMm: 55, yMm: 40.5, widthMm: 11, heightMm: 11 } as BoxMm,
+  circleSeal: { xMm: 56, yMm: 41.5, widthMm: 11, heightMm: 11 } as BoxMm,
 
   /**
    * Footer scroll below the description band: the flat band between the
@@ -153,7 +158,7 @@ export const SLOTS = {
    * three cells' horizontal spans come from FOOTER_CELLS_MM (per frame side),
    * because the dividers between them are painted in the frame art.
    */
-  footer: { xMm: 10.2, yMm: 94, widthMm: 52.4, heightMm: 9 } as BoxMm,
+  footer: { xMm: 10.8, yMm: 93.4, widthMm: 53.3, heightMm: 9 } as BoxMm,
 } as const;
 
 export interface BoxPx {
@@ -179,26 +184,14 @@ function mirrorBoxMm(box: BoxMm): BoxMm {
 }
 
 /**
- * Price gets the pure mirror plus a small manual nudge (-1mm x, +1mm y),
- * from fine-tuning the left-coin frame against its actual coin artwork —
- * the two frame images aren't pixel-perfect mirrors of each other, so the
- * plain formula was off by a hair. Re-measure with the percentage-grid
- * technique (see git history / scripts/grid-overlay.ts) if frame-left.png
- * ever changes.
- */
-function mirrorPriceBoxMm(box: BoxMm): BoxMm {
-  return { xMm: CARD_WIDTH_MM - box.xMm - box.widthMm - 1, yMm: box.yMm + 1, widthMm: box.widthMm, heightMm: box.heightMm };
-}
-
-/**
- * Resolves ALL of SLOTS for the given coin side. 'right' is the calibrated
- * original. 'left' mirrors every box horizontally — not just price. This
- * matters because SLOTS.art isn't centered (it's shifted toward the side
- * away from the coin, keeping a deliberate ~1mm clearance from it); mirroring
- * only the price and leaving art in place would collide the art box into
- * the coin on the left-coin frame. Mirroring symmetric boxes (title,
- * description) is a no-op. Exceptions: the circle seal follows the coin's
- * nudge, and the footer is not mirrored at all (see FOOTER_CELLS_MM).
+ * Resolves ALL of SLOTS for the given coin side. 'right' is SLOTS as written.
+ * 'left' mirrors every box horizontally — not just price — because
+ * frame-right.png is the exact mirror of frame-left.png. This matters because
+ * SLOTS.art isn't centered (it's shifted toward the side away from the coin,
+ * keeping a deliberate ~1mm clearance from it); mirroring only the price and
+ * leaving art in place would collide the art box into the coin on the
+ * left-coin frame. Mirroring symmetric boxes (title, description) is a no-op.
+ * The footer's painted dividers are mirrored too — see FOOTER_CELLS_MM.
  */
 export function getSlotsForSide(side: CoinSide): typeof SLOTS {
   if (side === "right") return SLOTS;
@@ -206,12 +199,9 @@ export function getSlotsForSide(side: CoinSide): typeof SLOTS {
     title: mirrorBoxMm(SLOTS.title),
     art: mirrorBoxMm(SLOTS.art),
     description: mirrorBoxMm(SLOTS.description),
-    price: mirrorPriceBoxMm(SLOTS.price),
-    // Anchored to the coin, so it takes the coin's mirror nudge too.
-    circleSeal: mirrorPriceBoxMm(SLOTS.circleSeal),
-    // NOT mirrored: both frames draw the footer scroll at the same place
-    // (rolls at ~10–62.5mm on each); only its painted dividers differ — see FOOTER_CELLS_MM.
-    footer: SLOTS.footer,
+    price: mirrorBoxMm(SLOTS.price),
+    circleSeal: mirrorBoxMm(SLOTS.circleSeal),
+    footer: mirrorBoxMm(SLOTS.footer),
   };
 }
 
@@ -220,20 +210,20 @@ export function getSlotsForSide(side: CoinSide): typeof SLOTS {
  * into three compartments; each footer value is centered in its compartment.
  * Measured on the frame PNGs scaled to the 874×1240 canvas (darkest narrow
  * columns across the scroll's mid-band; outer edges = where the end rolls'
- * shadow starts). The frames are not mirror images here — the dividers sit at
- * 28.4/49.9mm on frame-right but 26.2/48.5mm on frame-left — so each side
- * has its own spans. Re-measure if either frame PNG changes.
+ * shadow starts). The dividers are not centered (26.4/48.6mm on frame-left),
+ * so frame-right, its mirror, has them at 25.4/47.6mm and the cells in
+ * reverse order. Re-measure if frame-left.png changes.
  */
 export const FOOTER_CELLS_MM: Record<CoinSide, readonly { xMm: number; widthMm: number }[]> = {
   right: [
-    { xMm: 10.2, widthMm: 18.2 },
-    { xMm: 28.4, widthMm: 21.5 },
-    { xMm: 49.9, widthMm: 12.7 },
+    { xMm: 10.8, widthMm: 14.6 },
+    { xMm: 25.4, widthMm: 22.2 },
+    { xMm: 47.6, widthMm: 16.5 },
   ],
   left: [
-    { xMm: 9.9, widthMm: 16.3 },
-    { xMm: 26.2, widthMm: 22.3 },
-    { xMm: 48.5, widthMm: 14.0 },
+    { xMm: 9.9, widthMm: 16.5 },
+    { xMm: 26.4, widthMm: 22.2 },
+    { xMm: 48.6, widthMm: 14.6 },
   ],
 };
 
