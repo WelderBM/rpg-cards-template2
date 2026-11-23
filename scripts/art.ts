@@ -79,7 +79,10 @@ async function generateImage(prompt: string, apiKey: string, model: string): Pro
   }
   const json = (await res.json()) as {
     candidates?: { finishReason?: string; content?: { parts?: Record<string, any>[] } }[];
+    usageMetadata?: Record<string, unknown>;
   };
+  // Billing is per token: log the usage of every call so spending stays visible.
+  if (json.usageMetadata) console.log(`    uso: ${JSON.stringify(json.usageMetadata)}`);
   const parts = json.candidates?.[0]?.content?.parts ?? [];
   for (const part of parts) {
     const inline = part.inlineData ?? part.inline_data;
@@ -211,12 +214,14 @@ export async function cutOutBackground(page: Page, base64: string, mimeType: str
 }
 
 /** A catalog card to preview the art in; a stand-in potion card when the id isn't in the catalog yet. */
-function previewCard(catalog: Card[], id: string, imagem: string): Card {
+function previewCard(catalog: Card[], id: string, imagem: string, subject: string): Card {
   const real = catalog.find((c) => c.id === id);
   if (real) return { ...real, imagem };
   const titulo = id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+  // Vessel family named in the art prompt ("an OIL vial", "a GRENADE orb").
+  const subtitulo = /\bGRENADE\b/.test(subject) ? "Granada" : /\bOIL\b/.test(subject) ? "Óleo" : "Poção";
   return {
-    id, tipo: "pocao", titulo, subtitulo: "Poção", circulo: 1, pm: 1, preco: "T$30",
+    id, tipo: "pocao", titulo, subtitulo, circulo: 1, pm: 1, preco: "T$30",
     descricao: "Prévia da arte. O texto desta carta vem da mestre.",
     atributos: [{ valor: "" }, { valor: "" }, { valor: "" }],
     imagem,
@@ -279,7 +284,7 @@ export async function runArt(argv: string[]): Promise<void> {
           const image = await generateImage(buildPrompt(prompts, id), apiKey, model);
           await fs.writeFile(candidate, await cutOutBackground(page, image.data, image.mimeType));
           const rel = path.relative(ROOT_DIR, candidate).split(path.sep).join("/");
-          const card = previewCard(catalog, id, rel);
+          const card = previewCard(catalog, id, rel, prompts.itens[id]);
           await renderSingleCard(card, "right", path.join(CANDIDATES_DIR, `${id}-v${n}-moeda-direita.png`));
           await renderSingleCard(card, "left", path.join(CANDIDATES_DIR, `${id}-v${n}-moeda-esquerda.png`));
           console.log(`  ${id} v${n}: ${rel} (+ prévias nos dois lados)`);
