@@ -389,6 +389,18 @@ export const TYPE_FOOTER_DEFAULTS: Record<CardType, FooterAttrDefault[]> = {
     { icone: "star-formation.svg", rotulo: "Crítico" },
     { icone: "weight.svg", rotulo: "Carga" },
   ],
+  // Ammunition packs: "×20" (no icon), Carga, and a free 3rd cell.
+  municao: [
+    { icone: "", rotulo: "Qtd" },
+    { icone: "weight.svg", rotulo: "Carga" },
+    { icone: "", rotulo: "" },
+  ],
+  // Armor and shields (doc template: Bônus de Defesa, Penalidade, Carga; price on the coin).
+  armadura: [
+    { icone: "checked-shield.svg", rotulo: "Defesa" },
+    { icone: "armor-downgrade.svg", rotulo: "Penalidade" },
+    { icone: "weight.svg", rotulo: "Carga" },
+  ],
   item: [
     { icone: "backpack.svg", rotulo: "Peso" },
     { icone: "star-formation.svg", rotulo: "Raridade" },
@@ -405,6 +417,37 @@ export const TYPE_FOOTER_DEFAULTS: Record<CardType, FooterAttrDefault[]> = {
 };
 
 export const FOOTER_CELL_COUNT = 3;
+
+/**
+ * Type icon (assets/icons/), drawn at the inner end of each subtitle flourish
+ * ("—⚔ ARMA ⚔—") so the card types read apart at a glance. Same game-icons
+ * family as the footer icons. A subtitle can override its type's icon
+ * (a shield is an "armadura" card, but reads better with a shield).
+ */
+export const TYPE_ICONS: Record<CardType, string> = {
+  arma: "tipo-crossed-swords.svg",
+  municao: "tipo-arrow-cluster.svg",
+  armadura: "tipo-breastplate.svg",
+  item: "tipo-knapsack.svg",
+  pocao: "tipo-round-bottom-flask.svg",
+};
+export const SUBTITLE_ICONS: Record<string, string> = {
+  Escudo: "tipo-shield.svg",
+};
+
+/** Output subfolder per card type: output/cards/{pasta}/{id}.png and output/print/{pasta}/sheet-{n}.pdf. */
+export const TYPE_FOLDERS: Record<CardType, string> = {
+  arma: "armas",
+  municao: "municoes",
+  armadura: "armaduras",
+  item: "itens",
+  pocao: "pocoes",
+};
+
+/** Where the definitive build writes a card's PNG. */
+export function cardOutputPath(card: { id: string; tipo: CardType }): string {
+  return path.join(PATHS.outputCards, TYPE_FOLDERS[card.tipo], `${card.id}.png`);
+}
 
 // ---------------------------------------------------------------------------
 // Placeholder frame generation (only used when assets/frame/frame.png is

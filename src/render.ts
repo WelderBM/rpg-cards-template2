@@ -8,6 +8,7 @@ import {
   AUTOFIT_PRECISION_PX,
   CANVAS_HEIGHT_PX,
   CANVAS_WIDTH_PX,
+  cardOutputPath,
   type CoinSide,
   FOOTER_WRAP_MAX_RATIO,
   FOOTER_WRAP_MIN_GAIN,
@@ -297,17 +298,17 @@ export async function renderTemplateBlank(side: CoinSide = "right"): Promise<str
   }
 }
 
-/** Renders every card to output/cards/{id}.png. Throws TextOverflowError on the first card whose text can't be made to fit. */
+/** Renders every card to output/cards/{pasta do tipo}/{id}.png. Throws TextOverflowError on the first card whose text can't be made to fit. */
 export async function renderCards(cards: Card[], side: CoinSide = "right"): Promise<string[]> {
   const browser = await chromium.launch();
   const outputPaths: string[] = [];
   try {
-    await fs.mkdir(PATHS.outputCards, { recursive: true });
     const page = await newPage(browser);
     for (const card of cards) {
       await loadHtml(page, buildCardHtml(card, side));
       await autofitCard(page, card.id);
-      const outPath = path.join(PATHS.outputCards, `${card.id}.png`);
+      const outPath = cardOutputPath(card);
+      await fs.mkdir(path.dirname(outPath), { recursive: true });
       await page.screenshot({ path: outPath, omitBackground: true });
       outputPaths.push(outPath);
       console.log(`  rendered ${outPath}`);

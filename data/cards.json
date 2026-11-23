@@ -525,8 +525,8 @@
     "preco": "T$20",
     "descricao": "A rede tem pequenos dentes em sua trama e uma corda para controlar os inimigos presos. Se você acertar um ataque com a rede, não causa dano. Em vez disso, a vítima fica enredada. Conferir pág 150 do livro.",
     "atributos": [
-      { "valor": "--" },
-      { "valor": "--" },
+      { "valor": "–" },
+      { "valor": "–" },
       { "valor": "1" }
     ],
     "imagem": "assets/art/rede.png"
@@ -561,7 +561,7 @@
   },
   {
     "id": "balas",
-    "tipo": "item",
+    "tipo": "municao",
     "titulo": "Balas",
     "subtitulo": "Munição",
     "preco": "T$20",
@@ -575,7 +575,7 @@
   },
   {
     "id": "flechas",
-    "tipo": "item",
+    "tipo": "municao",
     "titulo": "Flechas",
     "subtitulo": "Munição",
     "preco": "T$1",
@@ -589,7 +589,7 @@
   },
   {
     "id": "pedras",
-    "tipo": "item",
+    "tipo": "municao",
     "titulo": "Pedras",
     "subtitulo": "Munição",
     "preco": "T$0,5",
@@ -603,7 +603,7 @@
   },
   {
     "id": "virotes",
-    "tipo": "item",
+    "tipo": "municao",
     "titulo": "Virotes",
     "subtitulo": "Munição",
     "preco": "T$2",

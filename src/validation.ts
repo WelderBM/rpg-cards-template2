@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { FOOTER_CELL_COUNT, ROOT_DIR, TYPE_FOOTER_DEFAULTS } from "./config.js";
-import { POTION_KINDS, type Card, type PotionCard } from "./types.js";
+import { ARMOR_KINDS, CARD_TYPES, POTION_KINDS, type Card, type PotionCard } from "./types.js";
 
 type WarningSink = (message: string) => void;
 
@@ -48,11 +48,16 @@ export function validateCards(cards: unknown[], warn: WarningSink = console.warn
     if (typeof card.id !== "string" || card.id.length === 0) {
       throw new Error("Every card needs a non-empty `id`.");
     }
-    if (seenIds.has(card.id)) throw new Error(`Duplicate card id "${card.id}" (data/cards.json + data/pocoes-*.json).`);
+    if (seenIds.has(card.id)) throw new Error(`Duplicate card id "${card.id}" (data/cards.json + data/pocoes-*.json + data/armaduras.json).`);
     seenIds.add(card.id);
 
-    if (!['arma', 'item', 'pocao'].includes(String(card.tipo))) {
-      throw new Error(`Card "${card.id}": invalid tipo "${String(card.tipo)}" (expected arma|item|pocao).`);
+    if (!(CARD_TYPES as readonly unknown[]).includes(card.tipo)) {
+      throw new Error(`Card "${card.id}": invalid tipo "${String(card.tipo)}" (expected ${CARD_TYPES.join("|")}).`);
+    }
+    if (card.tipo === "armadura" && !(ARMOR_KINDS as readonly unknown[]).includes(card.subtitulo)) {
+      throw new Error(
+        `Card "${card.id}": armadura needs subtitulo ${ARMOR_KINDS.join(" | ")} (got ${JSON.stringify(card.subtitulo)}).`,
+      );
     }
     if (typeof card.imagem !== "string" || card.imagem.length === 0) {
       throw new Error(`Card "${card.id}": needs an \`imagem\` path (the file itself may not exist yet).`);

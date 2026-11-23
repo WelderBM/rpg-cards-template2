@@ -1,8 +1,9 @@
 /**
  * `pnpm build` — the DEFINITIVE, print-ready build. Renders every card in
  * the catalog (data/cards.json + data/pocoes-*.json, see src/catalog.ts)
- * to output/cards/{id}.png and imposes them onto A4 sheets
- * (8-up, with crop marks) at output/print/sheet-{n}.pdf.
+ * to output/cards/{pasta}/{id}.png and imposes them onto A4 sheets
+ * (8-up, with crop marks, one set per type) at output/print/{pasta}/sheet-{n}.pdf,
+ * pasta = armas | municoes | armaduras | itens | pocoes (config.TYPE_FOLDERS).
  *
  * The frame comes in two mirrored variants (price coin top-right vs
  * top-left — see src/config.ts FRAME_PATHS/getPriceSlot), so this build
@@ -13,7 +14,7 @@
  *
  * `--ids=a,b,c` builds only those cards (the whole catalog is still
  * validated). Repeats from data/cards-to-reapeat.json still apply to them.
- * Every run deletes the previous output/print/sheet-*.pdf first.
+ * Every run deletes the previous sheet-*.pdf (all type folders) first.
  *
  * For a quick one-card-each comparison of both sides instead, see `pnpm test`
  * (scripts/test.ts), which writes to output/test/ and never touches
@@ -95,11 +96,11 @@ export async function runBuild(side: CoinSide, onlyIds: string[] | null = null):
 
   console.log("Imposing sheets...");
   await imposeToPdf(
-    cards.map((c) => c.id),
+    cards,
     catalog.map((c) => c.id),
   );
 
-  console.log("\nDone. See output/cards/ and output/print/.");
+  console.log("\nDone. See output/cards/<tipo>/ and output/print/<tipo>/.");
 }
 
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;

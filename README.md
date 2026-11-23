@@ -55,10 +55,12 @@ visualmente antes de rodar o lote de verdade.
 
 ### 3. `pnpm build` — gerar o lote definitivo
 
-Renderiza cada carta do catálogo (`data/cards.json` + `data/pocoes-*.json`)
-em `output/cards/{id}.png` e monta as folhas de impressão A4 (8 cartas A7 por
-folha, com marcas de corte) em `output/print/sheet-{n}.pdf`. As folhas do
-build anterior são apagadas antes.
+Renderiza cada carta do catálogo (`data/cards.json` + `data/armaduras.json` +
+`data/pocoes-*.json`) em `output/cards/{pasta}/{id}.png` e monta as folhas de
+impressão A4 (8 cartas A7 por folha, com marcas de corte) em
+`output/print/{pasta}/sheet-{n}.pdf`. Uma pasta por tipo: `armas`, `municoes`,
+`armaduras`, `itens`, `pocoes`; cada tipo tem as próprias folhas, para
+imprimir separado. As folhas do build anterior são apagadas antes.
 
 Como o frame existe em duas versões espelhadas (moeda à esquerda ou à
 direita — veja abaixo), essa é a build **definitiva** e sempre exige escolher
@@ -169,7 +171,8 @@ Tudo que é calibrável vive em `src/config.ts`:
 
 ## Formato dos dados
 
-O catálogo é `data/cards.json` mais todo arquivo `data/pocoes-*.json` (ex.:
+O catálogo é `data/cards.json` (armas e munições), `data/armaduras.json`
+(armaduras e escudos) e todo arquivo `data/pocoes-*.json` (ex.:
 `data/pocoes-1-circulo.json`, as 17 poções de 1º círculo: textos da mestre,
 literais, e os que ela não escreveu no padrão dela, conferidos com o livro;
 o campo `_fonte` diz qual é qual). Todos são
@@ -179,9 +182,9 @@ entre arquivos é erro.
 ```jsonc
 {
   "id": "espada-longa",           // único, usado no nome do arquivo de saída
-  "tipo": "arma",                 // "arma" | "item" | "pocao" — controla os ícones/ordem padrão do rodapé
+  "tipo": "arma",                 // "arma" | "municao" | "armadura" | "item" | "pocao" — controla o ícone do tipo, a pasta de saída e o rodapé padrão
   "titulo": "Espada Longa",
-  "subtitulo": "Arma",            // opcional (obrigatório em poção: "Poção" | "Óleo" | "Granada")
+  "subtitulo": "Arma",            // opcional (obrigatório em poção: "Poção" | "Óleo" | "Granada"; em armadura: "Armadura Leve" | "Armadura Pesada" | "Escudo")
   "preco": "T$15",                // vai na moeda
   "descricao": "Arma típica de soldados e guerreiros...",
   "atributos": [                  // EXATAMENTE 3 entradas (uma por célula do rodapé)

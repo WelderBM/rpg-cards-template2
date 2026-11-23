@@ -4,11 +4,12 @@ import { PATHS } from "./config.js";
 import type { Card } from "./types.js";
 import { validateCards } from "./validation.js";
 
-/** Extra data files picked up next to data/cards.json, e.g. data/pocoes-1-circulo.json. */
-const EXTRA_DATA_FILE = /^pocoes-.+\.json$/;
+/** Extra data files picked up next to data/cards.json: data/pocoes-*.json and data/armaduras*.json. */
+const EXTRA_DATA_FILE = /^(pocoes-.+|armaduras.*)\.json$/;
 
 /**
- * The card catalog = data/cards.json + every data/pocoes-*.json, in that
+ * The card catalog = data/cards.json + every data/pocoes-*.json and
+ * data/armaduras*.json, in that
  * order (extra files sorted by name). The potion files are kept as the game
  * master's literal source instead of being merged into cards.json, so a new
  * circle is just a new file and there is no second copy to drift. The whole

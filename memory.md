@@ -76,6 +76,14 @@ Histórico: a decisão dela de 29–30/07/2026 previa rodapé [Tipo, Duração, 
 - **Textos de poção (regra atualizada em 22/11/2026):** a mestre escreve o texto de *algumas* poções. Esses ficam literais. Para as demais, o Claude cruza os textos dela com a magia no livro, extrai a dinâmica que ela usa (tom, o que corta e o que mantém, como cita dado, duração e resistência) e escreve no mesmo padrão. O efeito sempre vem do livro, completo. Nunca usar `.claude/skills/t20` para magia truncada com `(...)` (Abençoar Alimentos, Área Escorregadia, Compreensão, Disfarce Ilusório, Escuridão, Luz, Visão Mística): sem o efeito completo, o texto delas vem da mestre ou do livro físico, porque escrever sem ele inventa regra. Onde o livro divergir da mestre nos dados, vale o livro (ver "Regra de fonte").
 - Arte da carta aprovada: `assets/art/pocao-cura.png`.
 
+## Armaduras, ícone de tipo e pastas — 22/11/2026 (pedido do dono)
+- **Armaduras e escudos:** `data/armaduras.json`, 12 cartas, `tipo: "armadura"`. Texto literal do doc; números conferidos com o livro (Tabela 3-5). O subtítulo é a categoria do livro (Armadura Leve, Armadura Pesada, Escudo). Rodapé: Defesa (`checked-shield`), Penalidade (`armor-downgrade`), Carga (`weight`); penalidade com "–". Armadura Completa ganhou a nota do livro, pela regra "livro prevalece": feita sob medida, T$200 para ajustar.
+- **Munições:** passaram de `item` para `tipo: "municao"`, com pasta e ícone próprios.
+- **Ícone de tipo** (ideia do dono com a mestre): fica no fim de cada filete do subtítulo, no lugar do losango. Espadas cruzadas para arma, feixe de flechas para munição, peitoral para armadura (escudo para Escudo), frasco para poção, mochila para item. Os ícones vêm da família game-icons, a mesma do rodapé, sem custo de IA.
+- **Preço longo:** "T$3.000" empilha "T$" sobre o número, porque em uma linha ficava ilegível na moeda.
+- **Saída:** `output/cards/{pasta}/` e `output/print/{pasta}/`, cada tipo com as próprias folhas.
+- **Arte:** prompts das 56 (armas, munições, armaduras) pela direção de arte, em `data/art-prompts.json` (`estilos`/`evitar_por_tipo`). O recorte ganhou o passo de vão fechado (branco puro ≤12, área ≥0,05%, só fora das poções). Geração aguardando aprovação do gasto.
+
 ## Munições — sprint executada em 22/11/2026 (aguardando aprovação do rodapé)
 
 - Quatro cartas `item` em `data/cards.json`, com texto literal da mestre e preços conferidos com o cap. 3: `balas` (T$20), `flechas` (T$1), `pedras` (T$0,5), `virotes` (T$2). Todas com subtítulo "Munição" e sem arte ainda.

@@ -18,7 +18,9 @@ import {
   ROOT_DIR,
   SLOTS,
   TEXT_SAFE_PADDING_PX,
+  SUBTITLE_ICONS,
   TYPE_FOOTER_DEFAULTS,
+  TYPE_ICONS,
   boxToPx,
   getSlotsForSide,
 } from "./config.js";
@@ -91,6 +93,21 @@ function footerText(card: Card, attr: { rotulo: string; valor: string }): string
   return FOOTER_LABEL_TYPES.includes(card.tipo) && attr.rotulo ? `${attr.rotulo}: ${value}` : value; // NBSP: "Carga: 1" never splits into 2 lines
 }
 
+/** Price on the coin; a long one ("T$3.000") stacks "T$" over the number. */
+function priceHtml(preco: string): string {
+  const attrs = `data-autofit="single" data-min="${FONTS.price.minPx}" data-max="${FONTS.price.maxPx}"`;
+  const m = preco.match(/^(T\$)\s*(.{5,})$/);
+  if (!m) return `<div class="price-text" ${attrs}>${escapeHtml(preco)}</div>`;
+  return `<div class="price-text stacked" ${attrs}><span class="currency">${m[1]}</span>${escapeHtml(m[2])}</div>`;
+}
+
+/** The card type's icon (or its subtitle's override), as a file URL; "" when the file is missing. */
+function typeIconFor(card: Card): string {
+  const name = (card.subtitulo && SUBTITLE_ICONS[card.subtitulo]) || TYPE_ICONS[card.tipo];
+  const file = name ? path.join(PATHS.icons, name) : "";
+  return file && existsSync(file) ? fileUrl(file) : "";
+}
+
 function resolveFooterAttr(card: Card, index: number): { icone: string; rotulo: string; valor: string } {
   const given: CardAttribute | undefined = card.atributos[index];
   const fallback = TYPE_FOOTER_DEFAULTS[card.tipo][index];
@@ -108,6 +125,7 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
   const artBox = boxToPx(slots.art);
   const descBox = boxToPx(slots.description);
   const priceBox = boxToPx(slots.price);
+  const typeIconUrl = typeIconFor(card);
   const circleSealBox = boxToPx(slots.circleSeal);
 
   // Missing art file → leave the art window as plain parchment. Rendering the
@@ -242,6 +260,20 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     vertical-align: 0.18em;
     background: no-repeat center / 100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 10'%3E%3Ccircle cx='2.5' cy='5' r='1.6' fill='%233a1f08' fill-opacity='.8'/%3E%3Cline x1='6' y1='5' x2='52' y2='5' stroke='%233a1f08' stroke-opacity='.8' stroke-width='1.4'/%3E%3Cpath d='M53 5 L58 1.6 L63 5 L58 8.4 Z' fill='none' stroke='%233a1f08' stroke-opacity='.8' stroke-width='1.3'/%3E%3C/svg%3E");
   }
+  ${
+    typeIconUrl
+      ? `/* Type icon replaces the diamond at the inner end of each flourish. */
+  .subtitle-text::before,
+  .subtitle-text::after {
+    width: 3.5em;
+    height: 1.5em;
+    vertical-align: -0.4em;
+    background:
+      no-repeat right center / 1.5em 1.5em url("${typeIconUrl}"),
+      no-repeat left center / 1.9em 0.5em url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 10' preserveAspectRatio='none'%3E%3Ccircle cx='2.5' cy='5' r='1.6' fill='%233a1f08' fill-opacity='.8'/%3E%3Cline x1='6' y1='5' x2='64' y2='5' stroke='%233a1f08' stroke-opacity='.8' stroke-width='1.4'/%3E%3C/svg%3E");
+  }`
+      : ""
+  }
   .subtitle-text::before { margin-right: 0.55em; }
   .subtitle-text::after { margin-left: 0.55em; transform: scaleX(-1); }
 
@@ -263,6 +295,9 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     color: #2b1a0d;
     line-height: 1;
   }
+  /* Long prices ("T$3.000") stack the currency over the number, so the number stays readable on the coin. */
+  .price-text.stacked { line-height: 0.95; }
+  .price-text.stacked .currency { display: block; font-size: 0.72em; }
 
   .circle-seal-slot {
     left: ${circleSealBox.leftPx}px;
@@ -370,7 +405,7 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
   </div>
 
   <div class="slot price-slot">
-    <div class="price-text" data-autofit="single" data-min="${FONTS.price.minPx}" data-max="${FONTS.price.maxPx}">${escapeHtml(card.preco)}</div>
+    ${priceHtml(card.preco)}
   </div>
 
   ${circleSeal}

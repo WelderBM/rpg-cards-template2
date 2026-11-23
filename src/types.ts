@@ -1,4 +1,8 @@
-export type CardType = "arma" | "item" | "pocao";
+export const CARD_TYPES = ["arma", "municao", "armadura", "item", "pocao"] as const;
+export type CardType = (typeof CARD_TYPES)[number];
+
+/** Book categories (Tormenta20, Tabela 3-5), used as the armor card's subtitle. */
+export const ARMOR_KINDS = ["Armadura Leve", "Armadura Pesada", "Escudo"] as const;
 
 export interface CardAttribute {
   /** SVG filename inside assets/icons/. Falls back to config.TYPE_FOOTER_DEFAULTS by tipo+position when omitted. */

@@ -33,7 +33,7 @@ Sem pnpm instalado na máquina: `npx pnpm@10 <comando>` funciona igual.
 Não é app web: as "superfícies" são as imagens e PDFs gerados em `output/`.
 - `pnpm template` → `output/template-blank.png` (moldura vazia, para aprovar calibração).
 - `pnpm test` → `output/test/{id}-moeda-{direita,esquerda}.png`.
-- `pnpm build -- right` e `pnpm build -- left` → `output/cards/{id}.png` + `output/print/sheet-{n}.pdf` (as folhas antigas são apagadas antes). **É o fluxo que importa**: o PDF que vai para a gráfica.
+- `pnpm build -- right` e `pnpm build -- left` → `output/cards/{pasta}/{id}.png` + `output/print/{pasta}/sheet-{n}.pdf`, uma pasta por tipo (armas, municoes, armaduras, itens, pocoes; as folhas antigas são apagadas antes). **É o fluxo que importa**: o PDF que vai para a gráfica.
 - Conferir nos dois lados da moeda: texto dentro das caixas, arte sem encostar na moeda, rodapé com 3 atributos.
 
 ## Regras que mais pegam bug
@@ -43,7 +43,7 @@ Não é app web: as "superfícies" são as imagens e PDFs gerados em `output/`.
 - Texto nunca é cortado: se não cabe no tamanho mínimo, `TextOverflowError` aborta o build. Não "resolver" baixando o mínimo sem o dono aprovar.
 - `times-to-repeat` em `data/cards-to-reapeat.json` é o total de cópias, não cópias extras. O nome do arquivo tem o typo de propósito.
 - Os divisores do rodapé são pintados na moldura: as células seguem `FOOTER_CELLS_MM` (medido por lado), não terços iguais.
-- Dados: o catálogo é `data/cards.json` + `data/pocoes-*.json` (`src/catalog.ts`). Textos de poção: os que a mestre escreve ficam literais; os demais seguem o padrão dela, conferidos com o efeito completo da magia no livro. Nunca escrever a partir de magia truncada com "(...)" em `.claude/skills/t20`. Se o material da mesa diverge do livro Tormenta20, vale o livro; valor duplo do livro ("1d10/1d12") → usar o maior.
+- Dados: o catálogo é `data/cards.json` (armas e munições) + `data/armaduras.json` + `data/pocoes-*.json` (`src/catalog.ts`). Textos de poção: os que a mestre escreve ficam literais; os demais seguem o padrão dela, conferidos com o efeito completo da magia no livro. Nunca escrever a partir de magia truncada com "(...)" em `.claude/skills/t20`. Se o material da mesa diverge do livro Tormenta20, vale o livro; valor duplo do livro ("1d10/1d12") → usar o maior.
 - Detectar "rodado direto" com `import.meta.url === pathToFileURL(process.argv[1]).href`; a concatenação `file://${...}` nunca bate no Windows.
 
 ## Lentes do revisor (opcional)
