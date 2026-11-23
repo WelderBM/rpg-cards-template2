@@ -523,13 +523,14 @@
     "titulo": "Rede",
     "subtitulo": "Arma",
     "preco": "T$20",
-    "descricao": "A rede tem pequenos dentes em sua trama e uma corda para controlar os inimigos presos. Se você acertar um ataque com a rede, não causa dano. Em vez disso, a vítima fica enredada. Conferir pág 150 do livro.",
+    "descricao": "A rede tem pequenos dentes em sua trama e uma corda para controlar os inimigos presos. Se você acertar um ataque com a rede, não causa dano. Em vez disso, a vítima fica enredada: deslocamento reduzido à metade, não pode correr nem fazer investidas e sofre –2 na Defesa e nos testes de ataque. Ela escapa com um teste de Acrobacia ou Força (CD 20). A rede tem 5 PV.",
     "atributos": [
       { "valor": "–" },
       { "valor": "–" },
       { "valor": "1" }
     ],
-    "imagem": "assets/art/rede.png"
+    "imagem": "assets/art/rede.png",
+    "_fonte": "Doc da mesa; a nota \"Conferir pág 150 do livro.\" virou a regra do livro (condição enredado, escape CD 20, 5 PV), a pedido do dono."
   },
   {
     "id": "tacape",
