@@ -27,7 +27,7 @@ import { chromium, type Page } from "playwright";
 import { loadCatalog } from "../src/catalog.js";
 import { PATHS, ROOT_DIR } from "../src/config.js";
 import { renderSingleCard } from "../src/render.js";
-import type { Card } from "../src/types.js";
+import type { Card, CardType } from "../src/types.js";
 
 const PROMPTS_FILE = path.join(ROOT_DIR, "data/art-prompts.json");
 const CANDIDATES_DIR = path.join(ROOT_DIR, "output/arte");
@@ -36,7 +36,7 @@ const API_BASE = "https://generativelanguage.googleapis.com/v1/models";
 
 /** Appended to every prompt: the cut-out below depends on a clean white background. */
 const TECHNICAL_RULES =
-  "Technical requirements: a single object, isolated, on a perfectly flat pure white (#FFFFFF) background " +
+  "Technical requirements: a single item (one object, or one compact group for ammunition), isolated, on a perfectly flat pure white (#FFFFFF) background " +
   "with no cast shadow; nothing touches the image edges; no text or lettering of any kind.";
 
 /** Background cut-out: max RGB distance from white still treated as background (flood-filled from the edges). */
@@ -50,10 +50,21 @@ const BG_TOLERANCE = 28;
 const SOFT_MAX_DIST = 120;
 const SOFT_MAX_SATURATION = 28;
 const SOFT_MAX_DEPTH_PX = 24;
+// Enclosed gaps (between a bow and its string, chain links, a net's mesh):
+// the edge flood-fill never reaches them, so their white would stay opaque.
+// A closed region this close to pure white and at least this big is
+// background too. Only for non-potion art: a potion's pale smoke or a glass
+// highlight could pass the test, and the 17 potions are already approved.
+const HOLE_MAX_DIST = 12;
+const HOLE_MIN_AREA_FRACTION = 0.0005; // 0.05% of the image (~520 px at 1024²)
 
 interface ArtPrompts {
+  /** Default style (written for the potions). */
   estilo: string;
   evitar: string;
+  /** Optional per-type style/avoid list (arma, municao, armadura...), replacing the default for that type. */
+  estilos?: Partial<Record<CardType, string>>;
+  evitar_por_tipo?: Partial<Record<CardType, string>>;
   itens: Record<string, string>;
 }
 
@@ -67,8 +78,10 @@ function loadDotEnv(): void {
   }
 }
 
-function buildPrompt(prompts: ArtPrompts, id: string): string {
-  return `${prompts.estilo}\n\nObject: ${prompts.itens[id]}\n\n${TECHNICAL_RULES}\n\nAvoid: ${prompts.evitar}`;
+function buildPrompt(prompts: ArtPrompts, id: string, tipo: CardType | undefined): string {
+  const estilo = (tipo && prompts.estilos?.[tipo]) || prompts.estilo;
+  const evitar = (tipo && prompts.evitar_por_tipo?.[tipo]) || prompts.evitar;
+  return `${estilo}\n\nObject: ${prompts.itens[id]}\n\n${TECHNICAL_RULES}\n\nAvoid: ${evitar}`;
 }
 
 /** One Gemini generateContent call → the first image part (base64 + mime type). */
@@ -113,12 +126,17 @@ async function generateImage(prompt: string, apiKey: string, model: string): Pro
  * that was already cut out (transparent background) comes back as the
  * original white-background image: `--recortar` relies on that.
  */
-export async function cutOutBackground(page: Page, base64: string, mimeType: string): Promise<Buffer> {
+export async function cutOutBackground(
+  page: Page,
+  base64: string,
+  mimeType: string,
+  opts: { holes?: boolean } = {},
+): Promise<Buffer> {
   // tsx/esbuild wraps named inner functions in __name(...), which doesn't
   // exist in the page; a string is never transformed, so define it there.
   await page.evaluate("globalThis.__name = (fn) => fn");
   const dataUrl = await page.evaluate(
-    async ({ src, tol, softDist, softSat, softDepth }) => {
+    async ({ src, tol, softDist, softSat, softDepth, holeDist, holeArea }) => {
       const img = new Image();
       img.src = src;
       await img.decode();
@@ -163,6 +181,32 @@ export async function cutOutBackground(page: Page, base64: string, mimeType: str
         if (x < w - 1) visit(x + 1, y);
         if (y > 0) visit(x, y - 1);
         if (y < h - 1) visit(x, y + 1);
+      }
+      // Enclosed gaps: closed near-white regions big enough to be background seen through the object.
+      if (holeArea > 0) {
+        const minArea = Math.max(200, Math.round(holeArea * w * h));
+        const seen = new Uint8Array(w * h);
+        for (let s = 0; s < w * h; s++) {
+          if (mark[s] !== 0 || seen[s] || distFromWhite(s) > holeDist) continue;
+          const comp: number[] = [];
+          head = 0;
+          tail = 0;
+          queue[tail++] = s;
+          seen[s] = 1;
+          while (head < tail) {
+            const k = queue[head++];
+            comp.push(k);
+            const x = k % w;
+            const y = (k - x) / w;
+            for (const n of [x > 0 ? k - 1 : -1, x < w - 1 ? k + 1 : -1, y > 0 ? k - w : -1, y < h - 1 ? k + w : -1]) {
+              if (n >= 0 && mark[n] === 0 && !seen[n] && distFromWhite(n) <= holeDist) {
+                seen[n] = 1;
+                queue[tail++] = n;
+              }
+            }
+          }
+          if (comp.length >= minArea) for (const k of comp) mark[k] = 1;
+        }
       }
       // Soft zone: grow from the background through light grey pixels, at most softDepth steps.
       const depth = new Uint16Array(w * h);
@@ -255,6 +299,8 @@ export async function cutOutBackground(page: Page, base64: string, mimeType: str
       softDist: SOFT_MAX_DIST,
       softSat: SOFT_MAX_SATURATION,
       softDepth: SOFT_MAX_DEPTH_PX,
+      holeDist: HOLE_MAX_DIST,
+      holeArea: opts.holes ? HOLE_MIN_AREA_FRACTION : 0,
     },
   );
   return Buffer.from(dataUrl.replace(/^data:image\/png;base64,/, ""), "base64");
@@ -308,7 +354,9 @@ async function writeCandidate(
   image: { data: string; mimeType: string },
 ): Promise<string> {
   const candidate = path.join(CANDIDATES_DIR, `${id}-v${n}.png`);
-  await fs.writeFile(candidate, await cutOutBackground(page, image.data, image.mimeType));
+  const tipo = catalog.find((c) => c.id === id)?.tipo;
+  const holes = tipo !== undefined && tipo !== "pocao";
+  await fs.writeFile(candidate, await cutOutBackground(page, image.data, image.mimeType, { holes }));
   const rel = path.relative(ROOT_DIR, candidate).split(path.sep).join("/");
   const card = previewCard(catalog, id, rel, prompts.itens[id] ?? "");
   await renderSingleCard(card, "right", path.join(CANDIDATES_DIR, `${id}-v${n}-moeda-direita.png`));
@@ -375,7 +423,7 @@ export async function runArt(argv: string[]): Promise<void> {
     for (const id of todo) {
       for (let n = 1; n <= args.variations; n++) {
         try {
-          const image = await generateImage(buildPrompt(prompts, id), apiKey, model);
+          const image = await generateImage(buildPrompt(prompts, id, catalog.find((c) => c.id === id)?.tipo), apiKey, model);
           await fs.writeFile(rawPath(id, n, RAW_EXT[image.mimeType] ?? "png"), Buffer.from(image.data, "base64"));
           const rel = await writeCandidate(page, catalog, prompts, id, n, image);
           console.log(`  ${id} v${n}: ${rel} (+ prévias nos dois lados)`);
