@@ -8,6 +8,7 @@
  *   pnpm art -- sono --variacoes=3    → 3 candidates for review instead of 1
  *   pnpm art -- sono --refazer        → regenerate even if assets/art/sono.png exists
  *   pnpm art -- --aprovar=sono:2      → copy candidate 2 of sono to assets/art/sono.png
+ *   pnpm art -- --recortar=sono:2     → redo the cut-out of candidate 2 (no API call, no cost)
  *
  * Candidates go to output/arte/{id}-v{n}.png, each with a preview of the card
  * on both coin sides ({id}-v{n}-moeda-{direita,esquerda}.png). With a single
@@ -40,6 +41,15 @@ const TECHNICAL_RULES =
 
 /** Background cut-out: max RGB distance from white still treated as background (flood-filled from the edges). */
 const BG_TOLERANCE = 28;
+/**
+ * Soft zone of the cut-out: light, grey (low-saturation) pixels reachable from
+ * the background within SOFT_MAX_DEPTH_PX (smoke, mist, wisps) become
+ * translucent (colour-to-alpha against white) instead of being chopped at the
+ * tolerance line. Coloured or darker pixels (glass rims, cork, iron) stop it.
+ */
+const SOFT_MAX_DIST = 120;
+const SOFT_MAX_SATURATION = 28;
+const SOFT_MAX_DEPTH_PX = 24;
 
 interface ArtPrompts {
   estilo: string;
@@ -98,31 +108,40 @@ async function generateImage(prompt: string, apiKey: string, model: string): Pro
  * INSIDE the glass stay opaque; the 2-pixel rim next to the background gets a
  * soft partial alpha. With real alpha, the card's drop-shadow follows the
  * object's outline, as in the reference card.
+ *
+ * The image is drawn over white with a small white border first, so a PNG
+ * that was already cut out (transparent background) comes back as the
+ * original white-background image: `--recortar` relies on that.
  */
 export async function cutOutBackground(page: Page, base64: string, mimeType: string): Promise<Buffer> {
   // tsx/esbuild wraps named inner functions in __name(...), which doesn't
   // exist in the page; a string is never transformed, so define it there.
   await page.evaluate("globalThis.__name = (fn) => fn");
   const dataUrl = await page.evaluate(
-    async ({ src, tol }) => {
+    async ({ src, tol, softDist, softSat, softDepth }) => {
       const img = new Image();
       img.src = src;
       await img.decode();
-      const w = img.naturalWidth;
-      const h = img.naturalHeight;
+      const pad = 8;
+      const w = img.naturalWidth + pad * 2;
+      const h = img.naturalHeight + pad * 2;
       const canvas = document.createElement("canvas");
       canvas.width = w;
       canvas.height = h;
       const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, pad, pad);
       const image = ctx.getImageData(0, 0, w, h);
       const px = image.data;
       const distFromWhite = (k: number) => {
         const r = 255 - px[k * 4], g = 255 - px[k * 4 + 1], b = 255 - px[k * 4 + 2];
         return Math.sqrt(r * r + g * g + b * b);
       };
+      const saturation = (k: number) =>
+        Math.max(px[k * 4], px[k * 4 + 1], px[k * 4 + 2]) - Math.min(px[k * 4], px[k * 4 + 1], px[k * 4 + 2]);
 
-      // 0 = object, 1 = background, 2/3 = rim rings next to the background.
+      // 0 = object, 1 = background, 2/3 = rim rings next to the background, 4 = soft zone (smoke, mist).
       const mark = new Uint8Array(w * h);
       const queue = new Int32Array(w * h);
       let head = 0;
@@ -145,14 +164,33 @@ export async function cutOutBackground(page: Page, base64: string, mimeType: str
         if (y > 0) visit(x, y - 1);
         if (y < h - 1) visit(x, y + 1);
       }
-      const touches = (k: number, value: number) => {
+      // Soft zone: grow from the background through light grey pixels, at most softDepth steps.
+      const depth = new Uint16Array(w * h);
+      head = 0;
+      tail = 0;
+      for (let k = 0; k < w * h; k++) if (mark[k] === 1) queue[tail++] = k;
+      while (head < tail) {
+        const k = queue[head++];
+        const d = mark[k] === 1 ? 0 : depth[k];
+        if (d >= softDepth) continue;
         const x = k % w;
         const y = (k - x) / w;
-        return (x > 0 && mark[k - 1] === value) || (x < w - 1 && mark[k + 1] === value) ||
-          (y > 0 && mark[k - w] === value) || (y < h - 1 && mark[k + w] === value);
+        for (const n of [x > 0 ? k - 1 : -1, x < w - 1 ? k + 1 : -1, y > 0 ? k - w : -1, y < h - 1 ? k + w : -1]) {
+          if (n >= 0 && mark[n] === 0 && distFromWhite(n) <= softDist && saturation(n) <= softSat) {
+            mark[n] = 4;
+            depth[n] = d + 1;
+            queue[tail++] = n;
+          }
+        }
+      }
+      const touches = (k: number, test: (value: number) => boolean) => {
+        const x = k % w;
+        const y = (k - x) / w;
+        return (x > 0 && test(mark[k - 1])) || (x < w - 1 && test(mark[k + 1])) ||
+          (y > 0 && test(mark[k - w])) || (y < h - 1 && test(mark[k + w]));
       };
-      for (let k = 0; k < w * h; k++) if (mark[k] === 0 && touches(k, 1)) mark[k] = 2;
-      for (let k = 0; k < w * h; k++) if (mark[k] === 0 && touches(k, 2)) mark[k] = 3;
+      for (let k = 0; k < w * h; k++) if (mark[k] === 0 && touches(k, (v) => v === 1 || v === 4)) mark[k] = 2;
+      for (let k = 0; k < w * h; k++) if (mark[k] === 0 && touches(k, (v) => v === 2)) mark[k] = 3;
 
       // Rim coverage: a rim pixel is (object colour × alpha) + (white × (1 − alpha)),
       // so alpha ≈ its distance from white ÷ that of the solid object next to it.
@@ -175,7 +213,10 @@ export async function cutOutBackground(page: Page, base64: string, mimeType: str
 
       let minX = w, minY = h, maxX = -1, maxY = -1;
       for (let k = 0; k < w * h; k++) {
-        const alpha = mark[k] === 1 ? 0 : mark[k] === 0 ? 1 : rimAlpha(k);
+        // Soft zone: colour-to-alpha against white (a light grey wisp = a dark wisp at low opacity).
+        const alpha = mark[k] === 1 ? 0 : mark[k] === 0 ? 1
+          : mark[k] === 4 ? (255 - Math.min(px[k * 4], px[k * 4 + 1], px[k * 4 + 2])) / 255
+          : rimAlpha(k);
         px[k * 4 + 3] = Math.round(alpha * 255);
         // De-matte the rim: its RGB is still blended with the white background,
         // which would draw a light halo over the parchment. Remove the white.
@@ -208,7 +249,13 @@ export async function cutOutBackground(page: Page, base64: string, mimeType: str
       out.getContext("2d")!.drawImage(canvas, sx, sy, sw, sh, 0, 0, sw, sh);
       return out.toDataURL("image/png");
     },
-    { src: `data:${mimeType};base64,${base64}`, tol: BG_TOLERANCE },
+    {
+      src: `data:${mimeType};base64,${base64}`,
+      tol: BG_TOLERANCE,
+      softDist: SOFT_MAX_DIST,
+      softSat: SOFT_MAX_SATURATION,
+      softDepth: SOFT_MAX_DEPTH_PX,
+    },
   );
   return Buffer.from(dataUrl.replace(/^data:image\/png;base64,/, ""), "base64");
 }
@@ -233,7 +280,7 @@ function parseArgs(argv: string[]) {
   const flag = (name: string) => argv.find((a) => a.startsWith(`--${name}=`))?.split("=")[1];
   const variations = Number(flag("variacoes") ?? 1);
   if (!Number.isInteger(variations) || variations < 1 || variations > 4) throw new Error("--variacoes deve ser de 1 a 4.");
-  return { ids, variations, redo: argv.includes("--refazer"), approve: flag("aprovar") };
+  return { ids, variations, redo: argv.includes("--refazer"), approve: flag("aprovar"), recut: flag("recortar") };
 }
 
 async function approve(spec: string): Promise<void> {
@@ -247,10 +294,58 @@ async function approve(spec: string): Promise<void> {
   }
 }
 
+/** Raw image as Gemini returned it, kept next to the candidate so the cut-out can be redone for free. */
+const RAW_EXT: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
+const rawPath = (id: string, n: number | string, ext: string) => path.join(CANDIDATES_DIR, `${id}-v${n}-bruta.${ext}`);
+
+/** Candidate + previews of the card on both coin sides. */
+async function writeCandidate(
+  page: Page,
+  catalog: Card[],
+  prompts: ArtPrompts,
+  id: string,
+  n: number | string,
+  image: { data: string; mimeType: string },
+): Promise<string> {
+  const candidate = path.join(CANDIDATES_DIR, `${id}-v${n}.png`);
+  await fs.writeFile(candidate, await cutOutBackground(page, image.data, image.mimeType));
+  const rel = path.relative(ROOT_DIR, candidate).split(path.sep).join("/");
+  const card = previewCard(catalog, id, rel, prompts.itens[id] ?? "");
+  await renderSingleCard(card, "right", path.join(CANDIDATES_DIR, `${id}-v${n}-moeda-direita.png`));
+  await renderSingleCard(card, "left", path.join(CANDIDATES_DIR, `${id}-v${n}-moeda-esquerda.png`));
+  return rel;
+}
+
+/**
+ * --recortar=id:n[,id:n...] redoes the cut-out of existing candidates without
+ * calling the API (no cost): from the raw image when it was kept, otherwise
+ * from the candidate itself (its transparent background goes back to white).
+ */
+async function recut(spec: string): Promise<void> {
+  const prompts = JSON.parse(await fs.readFile(PROMPTS_FILE, "utf-8")) as ArtPrompts;
+  const { cards: catalog } = await loadCatalog();
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    for (const pick of spec.split(",")) {
+      const [id, n] = pick.split(":");
+      const raw = Object.entries(RAW_EXT).find(([, ext]) => existsSync(rawPath(id, n, ext)));
+      const from = raw ? rawPath(id, n, raw[1]) : path.join(CANDIDATES_DIR, `${id}-v${n}.png`);
+      if (!existsSync(from)) throw new Error(`Não existe ${path.relative(ROOT_DIR, from)}.`);
+      const data = (await fs.readFile(from)).toString("base64");
+      const rel = await writeCandidate(page, catalog, prompts, id, n, { data, mimeType: raw ? raw[0] : "image/png" });
+      console.log(`  recortada: ${rel} (de ${path.relative(ROOT_DIR, from)}; + prévias); instale com --aprovar=${id}:${n}`);
+    }
+  } finally {
+    await browser.close();
+  }
+}
+
 export async function runArt(argv: string[]): Promise<void> {
   loadDotEnv();
   const args = parseArgs(argv);
   if (args.approve) return approve(args.approve);
+  if (args.recut) return recut(args.recut);
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -279,14 +374,10 @@ export async function runArt(argv: string[]): Promise<void> {
     const page = await browser.newPage();
     for (const id of todo) {
       for (let n = 1; n <= args.variations; n++) {
-        const candidate = path.join(CANDIDATES_DIR, `${id}-v${n}.png`);
         try {
           const image = await generateImage(buildPrompt(prompts, id), apiKey, model);
-          await fs.writeFile(candidate, await cutOutBackground(page, image.data, image.mimeType));
-          const rel = path.relative(ROOT_DIR, candidate).split(path.sep).join("/");
-          const card = previewCard(catalog, id, rel, prompts.itens[id]);
-          await renderSingleCard(card, "right", path.join(CANDIDATES_DIR, `${id}-v${n}-moeda-direita.png`));
-          await renderSingleCard(card, "left", path.join(CANDIDATES_DIR, `${id}-v${n}-moeda-esquerda.png`));
+          await fs.writeFile(rawPath(id, n, RAW_EXT[image.mimeType] ?? "png"), Buffer.from(image.data, "base64"));
+          const rel = await writeCandidate(page, catalog, prompts, id, n, image);
           console.log(`  ${id} v${n}: ${rel} (+ prévias nos dois lados)`);
         } catch (err) {
           failures.push(`${id} v${n}: ${(err as Error).message}`);
