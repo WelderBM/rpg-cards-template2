@@ -202,6 +202,8 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     font-variation-settings: "wght" ${FONTS.title.weight};
     white-space: nowrap;
     text-align: center;
+    /* Fixed line box: the subtitle sits at the same height whatever the fitted title size. */
+    line-height: ${Math.round(FONTS.title.maxPx * 1.2)}px;
     /* Warm sepia ink sampled from the reference title, with a faint light edge so it reads as pressed into the scroll. */
     color: #3a1f08;
     letter-spacing: 0.02em;

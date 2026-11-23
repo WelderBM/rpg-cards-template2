@@ -300,7 +300,11 @@ export const FONTS = {
     file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
     weight: 800,
     minPx: 26,
-    maxPx: 80,
+    // Deliberately low ceiling = one standard title size across the catalog
+    // (59 of 61 titles sit exactly here; only the 2 longest shrink, to ~47px).
+    // A higher max made short titles huge and pushed the subtitle onto the
+    // scroll's lower edge, while long ones left a big gap.
+    maxPx: 50,
   },
   subtitulo: {
     family: "Cinzel",
