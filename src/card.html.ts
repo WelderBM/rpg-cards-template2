@@ -149,7 +149,15 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
 
   const circleSeal =
     card.tipo === "pocao"
-      ? `<div class="slot circle-seal-slot">
+      ? `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="wax-edge" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="11" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="${Math.round(circleSealBox.widthPx * 0.07)}" xChannelSelector="R" yChannelSelector="G" result="poured" />
+      <!-- Displacement leaves a stair-stepped rim; a hair of blur makes it read as poured wax. -->
+      <feGaussianBlur in="poured" stdDeviation="0.6" />
+    </filter>
+  </svg>
+  <div class="slot circle-seal-slot">
     <div id="circle-seal-text" class="circle-seal-text" data-autofit="single" data-min="${FONTS.circleSeal.minPx}" data-max="${FONTS.circleSeal.maxPx}">${card.circulo}º</div>
   </div>`
       : "";
@@ -259,27 +267,39 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     top: ${circleSealBox.topPx}px;
     width: ${circleSealBox.widthPx}px;
     height: ${circleSealBox.heightPx}px;
-    border-radius: 50%;
-    padding: ${TEXT_SAFE_PADDING_PX}px;
-    border: 3px solid #4c1714;
-    background: radial-gradient(circle at 35% 28%, #ad5145 0%, #812c28 48%, #5b1b18 100%);
-    box-shadow: 2px 3px 5px rgba(43, 26, 13, 0.45), inset 0 0 0 3px rgba(238, 194, 104, 0.42);
+    /* Text must stay inside the stamped ring (::after), not just the disc's bounding box. */
+    padding: ${Math.round(circleSealBox.widthPx * 0.25)}px;
   }
+  /* Wax body: matte (no glossy hotspot), with an irregular poured edge from the #wax-edge SVG filter. */
   .circle-seal-slot::before {
     content: "";
     position: absolute;
-    inset: 6px;
-    border: 1px solid rgba(255, 224, 151, 0.65);
+    inset: 0;
     border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, transparent 58%, rgba(40, 4, 2, 0.28) 72%, transparent 86%),
+      radial-gradient(circle at 42% 36%, #a3342a 0%, #8a221b 42%, #6e1712 72%, #520f0c 100%);
+    filter: url(#wax-edge) drop-shadow(1px 2px 1.5px rgba(40, 18, 6, 0.5));
+  }
+  /* Stamped ring: a dark groove with a light lip, like a seal pressed into the wax. */
+  .circle-seal-slot::after {
+    content: "";
+    position: absolute;
+    inset: 15%;
+    border-radius: 50%;
+    box-shadow:
+      inset 1px 1.5px 1.5px rgba(45, 6, 4, 0.7),
+      0 0.5px 0.5px rgba(255, 196, 170, 0.35);
   }
   .circle-seal-text {
     font-family: "Cinzel", serif;
     font-weight: ${FONTS.circleSeal.weight};
     font-variation-settings: "wght" ${FONTS.circleSeal.weight};
-    color: #ffe5a7;
+    color: #f2d59b;
     line-height: 1;
     white-space: nowrap;
-    text-shadow: 0 1px 1px rgba(43, 13, 10, 0.8);
+    /* Debossed numeral: shadow above, light catch below. */
+    text-shadow: 0 -1px 0 rgba(50, 6, 4, 0.75), 0 1px 0 rgba(255, 214, 180, 0.3);
     z-index: 1;
   }
 
