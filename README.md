@@ -106,7 +106,7 @@ Precisa de uma chave da API do Gemini em `.env` na raiz (o `.env` está no
 ```
 GEMINI_API_KEY=<sua chave>
 # opcional: GEMINI_IMAGE_MODEL=gemini-nano-banana-2.1
-# opcional: PRINT_SYNC_DIR=G:\Meu Drive\Cartas RPG - print  (o build espelha output/print/ aqui; pnpm sync-print faz só a cópia)
+# opcional: DRIVE_SYNC_DIR=G:\Meu Drive\Cartas RPG  (o build espelha output/print/ em imprimir/ e output/cards/ em cards/; pnpm sync-drive faz só a cópia)
 ```
 
 ## Lado da moeda (frame espelhado)

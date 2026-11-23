@@ -27,7 +27,7 @@ import { loadCatalog } from "../src/catalog.js";
 import { type CoinSide, ROOT_DIR } from "../src/config.js";
 import { imposeToPdf } from "../src/impose.js";
 import { renderCards, TextOverflowError } from "../src/render.js";
-import { syncPrintFolder } from "../src/sync.js";
+import { syncToDrive } from "../src/sync.js";
 import type { Card } from "../src/types.js";
 
 function parseSideFromArgv(argv: string[]): CoinSide | null {
@@ -101,7 +101,7 @@ export async function runBuild(side: CoinSide, onlyIds: string[] | null = null):
     catalog.map((c) => c.id),
   );
 
-  await syncPrintFolder();
+  await syncToDrive();
 
   console.log("\nDone. See output/cards/<tipo>/ and output/print/<tipo>/.");
 }

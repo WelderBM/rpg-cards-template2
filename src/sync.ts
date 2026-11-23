@@ -5,78 +5,88 @@ import path from "node:path";
 import { PATHS, ROOT_DIR } from "./config.js";
 import { loadDotEnv } from "./env.js";
 
-/** Last synced hash per sheet, so an unchanged sheet is not copied (and re-uploaded by Drive) again. */
-const MANIFEST = path.join(ROOT_DIR, "output", ".print-sync.json");
-const isSheet = (name: string) => /^sheet-\d+\.pdf$/.test(name);
+/** Last synced hash per file, so an unchanged file is not copied (and re-uploaded by Drive) again. */
+const MANIFEST = path.join(ROOT_DIR, "output", ".drive-sync.json");
 
-async function listSheets(dir: string): Promise<string[]> {
+/** What is mirrored: local folder → subfolder of DRIVE_SYNC_DIR, one level of type folders inside. */
+const MIRRORS = [
+  { from: PATHS.outputPrint, to: "imprimir", file: /^sheet-\d+\.pdf$/ },
+  { from: PATHS.outputCards, to: "cards", file: /\.png$/ },
+];
+
+async function listFiles(dir: string, file: RegExp): Promise<string[]> {
   const out: string[] = [];
   if (!existsSync(dir)) return out;
   for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
     for (const name of await fs.readdir(path.join(dir, entry.name))) {
-      if (isSheet(name)) out.push(`${entry.name}/${name}`);
+      if (file.test(name)) out.push(`${entry.name}/${name}`);
     }
   }
   return out;
 }
 
 /**
- * Mirrors output/print/ into PRINT_SYNC_DIR (env or .env), e.g. a folder of
- * Google Drive for Desktop ("G:\Meu Drive\Cartas RPG - print"), so the
- * printable sheets in the Drive always match the last build: changed sheets
- * are copied, sheets that no longer exist are removed there. Unset = no sync.
- * When the folder can't be reached (Drive app closed), the build still
- * succeeds but says so loudly: the copies there are then out of date.
+ * Mirrors output/print/ → {DRIVE_SYNC_DIR}/imprimir/ and output/cards/ →
+ * {DRIVE_SYNC_DIR}/cards/. DRIVE_SYNC_DIR (env or .env) is a Google Drive for
+ * Desktop folder, e.g. "G:\Meu Drive\Cartas RPG". Owner's hard rule: what
+ * changes here must change there. Changed files are copied, files that no
+ * longer exist here are removed there. Unset = no sync. When the folder can't
+ * be reached (Drive app closed), the build still succeeds but says so loudly.
  */
-export async function syncPrintFolder(): Promise<void> {
+export async function syncToDrive(): Promise<void> {
   loadDotEnv();
-  const dest = process.env.PRINT_SYNC_DIR;
-  if (!dest) return;
-  if (!existsSync(path.dirname(dest))) {
+  const root = process.env.DRIVE_SYNC_DIR;
+  if (!root) return;
+  if (!existsSync(path.dirname(root))) {
     console.error(
-      `\n!!! DRIVE NÃO SINCRONIZADO: ${path.dirname(dest)} não está acessível (o app do Google Drive está aberto e logado?).` +
-        `\n!!! As folhas de lá ficaram desatualizadas. Abra o Drive e rode: pnpm sync-print`,
+      `\n!!! DRIVE NÃO SINCRONIZADO: ${path.dirname(root)} não está acessível (o app do Google Drive está aberto e logado?).` +
+        `\n!!! O Drive ficou desatualizado. Abra o Drive e rode: pnpm sync-drive`,
     );
     return;
   }
 
-  let manifest: { dest?: string; files: Record<string, string> } = { files: {} };
+  let manifest: { root?: string; files: Record<string, string> } = { files: {} };
   try {
     manifest = JSON.parse(await fs.readFile(MANIFEST, "utf-8"));
   } catch {
     /* first sync */
   }
-  if (manifest.dest !== dest) manifest = { dest, files: {} };
+  if (manifest.root !== root) manifest = { root, files: {} };
 
-  const local = await listSheets(PATHS.outputPrint);
-  let removed = 0;
-  for (const rel of await listSheets(dest)) {
-    if (!local.includes(rel)) {
-      await fs.rm(path.join(dest, rel));
-      delete manifest.files[rel];
-      removed++;
+  for (const mirror of MIRRORS) {
+    const dest = path.join(root, mirror.to);
+    const local = await listFiles(mirror.from, mirror.file);
+    let removed = 0;
+    for (const rel of await listFiles(dest, mirror.file)) {
+      if (!local.includes(rel)) {
+        await fs.rm(path.join(dest, rel));
+        delete manifest.files[`${mirror.to}/${rel}`];
+        removed++;
+      }
     }
-  }
-  let copied = 0;
-  for (const rel of local) {
-    const from = path.join(PATHS.outputPrint, rel);
-    const to = path.join(dest, rel);
-    const hash = createHash("sha256").update(await fs.readFile(from)).digest("hex");
-    const same = manifest.files[rel] === hash && existsSync(to) && (await fs.stat(to)).size === (await fs.stat(from)).size;
-    if (same) continue;
-    await fs.mkdir(path.dirname(to), { recursive: true });
-    await fs.copyFile(from, to);
-    manifest.files[rel] = hash;
-    copied++;
+    let copied = 0;
+    for (const rel of local) {
+      const key = `${mirror.to}/${rel}`;
+      const from = path.join(mirror.from, rel);
+      const to = path.join(dest, rel);
+      const hash = createHash("sha256").update(await fs.readFile(from)).digest("hex");
+      const same = manifest.files[key] === hash && existsSync(to) && (await fs.stat(to)).size === (await fs.stat(from)).size;
+      if (same) continue;
+      await fs.mkdir(path.dirname(to), { recursive: true });
+      await fs.copyFile(from, to);
+      manifest.files[key] = hash;
+      copied++;
+    }
+    console.log(`Drive ${mirror.to}/: ${copied} copiado(s), ${local.length - copied} igual(is), ${removed} removido(s)`);
   }
   await fs.writeFile(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");
-  console.log(`Drive: ${copied} folha(s) copiada(s), ${local.length - copied} igual(is), ${removed} removida(s) → ${dest}`);
+  console.log(`Drive sincronizado → ${root}`);
 }
 
 const isMain = process.argv[1]?.endsWith("sync.ts");
 if (isMain) {
-  syncPrintFolder().catch((err) => {
+  syncToDrive().catch((err) => {
     console.error(err);
     process.exitCode = 1;
   });

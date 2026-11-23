@@ -10,7 +10,7 @@
     "dev": "tsx scripts/dev.ts",
     "typecheck": "tsc --noEmit",
     "art": "tsx scripts/art.ts",
-    "sync-print": "tsx src/sync.ts"
+    "sync-drive": "tsx src/sync.ts"
   },
   "dependencies": {
     "chokidar": "^3.6.0",
