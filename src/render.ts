@@ -8,7 +8,10 @@ import {
   AUTOFIT_PRECISION_PX,
   CANVAS_HEIGHT_PX,
   CANVAS_WIDTH_PX,
+  cardOutputPath,
   type CoinSide,
+  FOOTER_WRAP_MAX_RATIO,
+  FOOTER_WRAP_MIN_GAIN,
   LINE_HEIGHT,
   PATHS,
 } from "./config.js";
@@ -73,7 +76,14 @@ function measureFit(selector: string): FitMeasurement {
   const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom);
   const maxWidthOverride = el.dataset.maxWidthPx ? Number(el.dataset.maxWidthPx) : null;
   const availWidthPx = maxWidthOverride ?? box.clientWidth - padX;
-  const availHeightPx = box.clientHeight - padY;
+  // data-max-lines caps a wrapping element (footer fallback) to N lines.
+  const maxLines = el.dataset.maxLines ? Number(el.dataset.maxLines) : null;
+  // Half a line of slack: scrollHeight rounds up, and N+1 lines still exceed it.
+  // line-height "normal" parses to NaN; fall back to the usual ~1.2em.
+  const elStyle = getComputedStyle(el);
+  const lineHeightPx = parseFloat(elStyle.lineHeight) || parseFloat(elStyle.fontSize) * 1.2;
+  const lineCapPx = maxLines ? (maxLines + 0.5) * lineHeightPx : Infinity;
+  const availHeightPx = Math.min(box.clientHeight - padY, lineCapPx);
   const textWidthPx = el.scrollWidth;
   const textHeightPx = el.scrollHeight;
   return {
@@ -189,6 +199,58 @@ async function fitMultiLine(page: Page, selector: string, cardId: string, slotNa
   await apply(minPx, hi);
 }
 
+/**
+ * Fits a footer value on one line, or wrapped into at most 2 centered lines
+ * (same width budget) when that allows a clearly larger font — e.g.
+ * "Vontade parcial" in the narrow 3rd compartment, which on one line would
+ * drag the whole (levelled) footer down to the minimum size. The value is
+ * never cut or abbreviated: if neither form fits, TextOverflowError.
+ */
+async function fitFooterValue(page: Page, selector: string, cardId: string, slotName: string): Promise<void> {
+  const setWrap = (on: boolean) =>
+    page.evaluate(
+      ({ selector, on, wrapMaxRatio }) => {
+        const el = document.querySelector(selector) as HTMLElement;
+        el.classList.toggle("footer-wrap", on);
+        el.dataset.maxOneLine ??= el.dataset.max;
+        if (on) {
+          el.dataset.maxLines = "2";
+          el.style.maxWidth = `${el.dataset.maxWidthPx}px`;
+          // Two lines at full size fill the scroll band edge to edge.
+          el.dataset.max = String(Math.round(Number(el.dataset.maxOneLine) * wrapMaxRatio));
+        } else {
+          delete el.dataset.maxLines;
+          el.style.maxWidth = "";
+          el.dataset.max = el.dataset.maxOneLine;
+        }
+      },
+      { selector, on, wrapMaxRatio: FOOTER_WRAP_MAX_RATIO },
+    );
+  const tryFit = async (wrap: boolean): Promise<number | null> => {
+    await setWrap(wrap);
+    try {
+      await fitSingleLine(page, selector, cardId, slotName);
+      return page.evaluate((sel) => parseFloat((document.querySelector(sel) as HTMLElement).style.fontSize), selector);
+    } catch (err) {
+      if (err instanceof TextOverflowError) return null;
+      throw err;
+    }
+  };
+
+  const oneLine = await tryFit(false);
+  const text = (await page.textContent(selector)) ?? "";
+  const wrapped = /\s/.test(text.trim()) ? await tryFit(true) : null;
+
+  if (wrapped !== null && (oneLine === null || wrapped > oneLine * FOOTER_WRAP_MIN_GAIN)) {
+    await tryFit(true);
+  } else if (oneLine !== null) {
+    await tryFit(false);
+  } else {
+    await setWrap(false);
+    await fitSingleLine(page, selector, cardId, slotName); // throws the one-line overflow detail
+  }
+}
+
 async function autofitCard(page: Page, cardId: string): Promise<void> {
   await page.evaluate(() => document.fonts.ready);
 
@@ -196,14 +258,30 @@ async function autofitCard(page: Page, cardId: string): Promise<void> {
   await fitSingleLine(page, ".price-text", cardId, "price");
   await fitMultiLine(page, ".description-text", cardId, "description");
 
+  if ((await page.locator("#circle-seal-text").count()) > 0) {
+    await fitSingleLine(page, "#circle-seal-text", cardId, "circulo");
+  }
+
   if ((await page.locator("#subtitle-text").count()) > 0) {
     await fitSingleLine(page, "#subtitle-text", cardId, "subtitulo");
   }
 
-  const footerValueCount = await page.locator(".footer-pair").count();
-  for (let i = 0; i < footerValueCount; i++) {
-    await fitSingleLine(page, `#footer-value-${i}`, cardId, `footer[${i}].valor`);
+  // By element id, not 0..count-1: an intentionally empty cell has no value
+  // element, so the ids on the page can skip a position (e.g. 0 and 1 only).
+  const footerValueIds = await page.locator(".footer-pair").evaluateAll((els) => els.map((el) => el.id));
+  for (const id of footerValueIds) {
+    await fitFooterValue(page, `#${id}`, cardId, `footer[${id.replace("footer-value-", "")}].valor`);
   }
+
+  // Then the whole footer takes the SMALLEST fitted size: each value fitting
+  // alone made "Poção" big and "Instantâneo" small side by side on one strip.
+  // Shrinking only ever keeps a value inside its already-verified budget.
+  await page.evaluate(() => {
+    const values = Array.from(document.querySelectorAll<HTMLElement>(".footer-pair"));
+    if (values.length < 2) return;
+    const smallest = Math.min(...values.map((el) => parseFloat(el.style.fontSize)));
+    for (const el of values) el.style.fontSize = `${smallest}px`;
+  });
 }
 
 /** Renders only the frame layer (no text/art/price) to output/template-blank.png, for visual approval. */
@@ -220,17 +298,17 @@ export async function renderTemplateBlank(side: CoinSide = "right"): Promise<str
   }
 }
 
-/** Renders every card to output/cards/{id}.png. Throws TextOverflowError on the first card whose text can't be made to fit. */
+/** Renders every card to output/cards/{pasta do tipo}/{id}.png. Throws TextOverflowError on the first card whose text can't be made to fit. */
 export async function renderCards(cards: Card[], side: CoinSide = "right"): Promise<string[]> {
   const browser = await chromium.launch();
   const outputPaths: string[] = [];
   try {
-    await fs.mkdir(PATHS.outputCards, { recursive: true });
     const page = await newPage(browser);
     for (const card of cards) {
       await loadHtml(page, buildCardHtml(card, side));
       await autofitCard(page, card.id);
-      const outPath = path.join(PATHS.outputCards, `${card.id}.png`);
+      const outPath = cardOutputPath(card);
+      await fs.mkdir(path.dirname(outPath), { recursive: true });
       await page.screenshot({ path: outPath, omitBackground: true });
       outputPaths.push(outPath);
       console.log(`  rendered ${outPath}`);

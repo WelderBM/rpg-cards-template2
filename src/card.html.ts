@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
@@ -6,7 +7,10 @@ import {
   CANVAS_WIDTH_PX,
   type CoinSide,
   FONTS,
-  FOOTER_CELL_COUNT,
+  FOOTER_CELL_PADDING_PX,
+  FOOTER_CELLS_MM,
+  FOOTER_EMPTY_VALUE,
+  FOOTER_LABEL_TYPES,
   FRAME_PATHS,
   LINE_HEIGHT,
   PATHS,
@@ -14,7 +18,9 @@ import {
   ROOT_DIR,
   SLOTS,
   TEXT_SAFE_PADDING_PX,
+  SUBTITLE_ICONS,
   TYPE_FOOTER_DEFAULTS,
+  TYPE_ICONS,
   boxToPx,
   getSlotsForSide,
 } from "./config.js";
@@ -77,6 +83,31 @@ function baseStyles(): string {
 }
 
 /** Resolve a card's footer attribute at `index`, filling gaps from the type default. */
+/**
+ * What a footer cell prints: "Rótulo: valor" for FOOTER_LABEL_TYPES, the bare
+ * value otherwise; a critical multiplier is typeset with "×" ("19x2" → "19×2"),
+ * as on the reference. Display only: the data keeps the plain "x".
+ */
+function footerText(card: Card, attr: { rotulo: string; valor: string }): string {
+  const value = attr.valor.replace(/(\d)\s*x\s*(\d)/gi, "$1×$2");
+  return FOOTER_LABEL_TYPES.includes(card.tipo) && attr.rotulo ? `${attr.rotulo}: ${value}` : value; // NBSP: "Carga: 1" never splits into 2 lines
+}
+
+/** Price on the coin; a long one ("T$3.000") stacks "T$" over the number. */
+function priceHtml(preco: string): string {
+  const attrs = `data-autofit="single" data-min="${FONTS.price.minPx}" data-max="${FONTS.price.maxPx}"`;
+  const m = preco.match(/^(T\$)\s*(.{5,})$/);
+  if (!m) return `<div class="price-text" ${attrs}>${escapeHtml(preco)}</div>`;
+  return `<div class="price-text stacked" ${attrs}><span class="currency">${m[1]}</span>${escapeHtml(m[2])}</div>`;
+}
+
+/** The card type's icon (or its subtitle's override), as a file URL; "" when the file is missing. */
+function typeIconFor(card: Card): string {
+  const name = (card.subtitulo && SUBTITLE_ICONS[card.subtitulo]) || TYPE_ICONS[card.tipo];
+  const file = name ? path.join(PATHS.icons, name) : "";
+  return file && existsSync(file) ? fileUrl(file) : "";
+}
+
 function resolveFooterAttr(card: Card, index: number): { icone: string; rotulo: string; valor: string } {
   const given: CardAttribute | undefined = card.atributos[index];
   const fallback = TYPE_FOOTER_DEFAULTS[card.tipo][index];
@@ -94,44 +125,60 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
   const artBox = boxToPx(slots.art);
   const descBox = boxToPx(slots.description);
   const priceBox = boxToPx(slots.price);
-  const footerBox = boxToPx(slots.footer);
+  const typeIconUrl = typeIconFor(card);
+  const circleSealBox = boxToPx(slots.circleSeal);
 
-  const artUrl = fileUrl(path.join(ROOT_DIR, card.imagem));
+  // Missing art file → leave the art window as plain parchment. Rendering the
+  // <img> anyway printed Chromium's broken-image icon + grey border on the
+  // card (and in the print PDFs). validateCards warns about these cards.
+  const artPath = path.join(ROOT_DIR, card.imagem);
+  const artUrl = existsSync(artPath) ? fileUrl(artPath) : null;
   const frameUrl = fileUrl(FRAME_PATHS[side]);
 
-  // One flat row: icon + value (no label text — the icon conveys what the
-  // stat is), pairs separated by a plain "|" — no boxes/dividers, matching
-  // the reference (text sits directly on the parchment, not in bordered cells).
   // Fixed budget reserved for the two flourish glyphs flanking the subtitle,
   // so the subtitle's own fit-measurement wrapper has a real (non-shrink-wrap) width.
-  const subtitleFlourishBudgetPx = 40;
+  const subtitleFlourishBudgetPx = 0; // flourishes are ::before/::after of the text itself
   const subtitleTextWidthPx = titleBox.widthPx - TEXT_SAFE_PADDING_PX * 2 - subtitleFlourishBudgetPx * 2;
 
-  const footerSeparatorPx = 16;
-  const cellWidthPx = Math.floor(
-    (footerBox.widthPx - footerSeparatorPx * (FOOTER_CELL_COUNT - 1)) / FOOTER_CELL_COUNT,
-  );
   const footerIconPx = 22;
   const footerGapPx = 6;
-  // Width budget passed to the value via data-max-width-px (not a wrapping
-  // box) — the value must shrink-wrap and sit centered right next to its
-  // icon, not float inside an oversized invisible box (that left-shifted the
-  // whole icon+value pair visually). The autofit measurement still enforces
-  // this ceiling; see measureFit's maxWidthOverride in render.ts.
-  const footerTextWidthPx = cellWidthPx - footerIconPx - footerGapPx - TEXT_SAFE_PADDING_PX * 2;
 
-  const footerCells = Array.from({ length: FOOTER_CELL_COUNT }, (_, i) => {
+  // One cell per compartment PAINTED on the frame's footer scroll (the
+  // dividers are part of the frame art, so no separators are drawn here);
+  // icon + value centered in it, no label text — the icon conveys what the
+  // stat is. An empty valor ("") shows FOOTER_EMPTY_VALUE ("–") with no icon
+  // (ammunition [Qtd, Carga, –]; potions without Resistência).
+  const footerCells = FOOTER_CELLS_MM[side].map((span, i) => {
     const attr = resolveFooterAttr(card, i);
-    const iconUrl = attr.icone ? fileUrl(path.join(PATHS.icons, attr.icone)) : "";
-    const separator = i < FOOTER_CELL_COUNT - 1 ? `<span class="footer-separator"></span>` : "";
+    const cell = boxToPx({ xMm: span.xMm, yMm: slots.footer.yMm, widthMm: span.widthMm, heightMm: slots.footer.heightMm });
+    const isEmpty = attr.valor.trim() === "";
+    const iconUrl = attr.icone && !isEmpty ? fileUrl(path.join(PATHS.icons, attr.icone)) : "";
+    // Width budget passed via data-max-width-px (not a wrapping box): the
+    // value must shrink-wrap and sit centered right next to its icon; the
+    // autofit still enforces this ceiling (measureFit's maxWidthOverride).
+    const textWidthPx = cell.widthPx - FOOTER_CELL_PADDING_PX * 2 - (iconUrl ? footerIconPx + footerGapPx : 0);
+    const content = `${iconUrl ? `<img class="footer-icon" src="${iconUrl}" alt="" />` : ""}
+        <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}" data-max-width-px="${textWidthPx}">${escapeHtml(isEmpty ? FOOTER_EMPTY_VALUE : footerText(card, attr))}</div>`;
     return `
-      <div class="footer-cell" style="width:${cellWidthPx}px;">
-        ${iconUrl ? `<img class="footer-icon" src="${iconUrl}" alt="" />` : ""}
-        <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}" data-max-width-px="${footerTextWidthPx}">${escapeHtml(attr.valor)}</div>
-      </div>
-      ${separator}
-    `;
+      <div class="slot footer-cell" style="left:${cell.leftPx}px; top:${cell.topPx}px; width:${cell.widthPx}px; height:${cell.heightPx}px;">
+        ${content}
+      </div>`;
   }).join("\n");
+
+  const circleSeal =
+    card.tipo === "pocao"
+      ? `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="wax-edge" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="11" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="${Math.round(circleSealBox.widthPx * 0.07)}" xChannelSelector="R" yChannelSelector="G" result="poured" />
+      <!-- Displacement leaves a stair-stepped rim; a hair of blur makes it read as poured wax. -->
+      <feGaussianBlur in="poured" stdDeviation="0.6" />
+    </filter>
+  </svg>
+  <div class="slot circle-seal-slot">
+    <div id="circle-seal-text" class="circle-seal-text" data-autofit="single" data-min="${FONTS.circleSeal.minPx}" data-max="${FONTS.circleSeal.maxPx}">${card.circulo}º</div>
+  </div>`
+      : "";
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -173,8 +220,12 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     font-variation-settings: "wght" ${FONTS.title.weight};
     white-space: nowrap;
     text-align: center;
-    color: #2b1a0d;
+    /* Fixed line box: the subtitle sits at the same height whatever the fitted title size. */
+    line-height: ${Math.round(FONTS.title.maxPx * 1.2)}px;
+    /* Warm sepia ink sampled from the reference title, with a faint light edge so it reads as pressed into the scroll. */
+    color: #3a1f08;
     letter-spacing: 0.02em;
+    text-shadow: 0 1px 0 rgba(255, 238, 196, 0.55);
   }
   .subtitle-text {
     font-family: "Cinzel", serif;
@@ -197,10 +248,34 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     align-items: center;
     justify-content: center;
   }
-  .subtitle-flourish {
-    color: rgba(43, 26, 13, 0.55);
-    flex-shrink: 0;
+  /* Reference "——◆ ADAGA ◆——": a thin rule ending in a diamond, hugging the
+     word on both sides. Pseudo-elements in em, so they scale with the fitted
+     subtitle and count in its measured width (the autofit keeps them inside). */
+  .subtitle-text::before,
+  .subtitle-text::after {
+    content: "";
+    display: inline-block;
+    width: 3.2em;
+    height: 0.5em;
+    vertical-align: 0.18em;
+    background: no-repeat center / 100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 10'%3E%3Ccircle cx='2.5' cy='5' r='1.6' fill='%233a1f08' fill-opacity='.8'/%3E%3Cline x1='6' y1='5' x2='52' y2='5' stroke='%233a1f08' stroke-opacity='.8' stroke-width='1.4'/%3E%3Cpath d='M53 5 L58 1.6 L63 5 L58 8.4 Z' fill='none' stroke='%233a1f08' stroke-opacity='.8' stroke-width='1.3'/%3E%3C/svg%3E");
   }
+  ${
+    typeIconUrl
+      ? `/* Type icon replaces the diamond at the inner end of each flourish. */
+  .subtitle-text::before,
+  .subtitle-text::after {
+    width: 3.5em;
+    height: 1.5em;
+    vertical-align: -0.4em;
+    background:
+      no-repeat right center / 1.5em 1.5em url("${typeIconUrl}"),
+      no-repeat left center / 1.9em 0.5em url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 10' preserveAspectRatio='none'%3E%3Ccircle cx='2.5' cy='5' r='1.6' fill='%233a1f08' fill-opacity='.8'/%3E%3Cline x1='6' y1='5' x2='64' y2='5' stroke='%233a1f08' stroke-opacity='.8' stroke-width='1.4'/%3E%3C/svg%3E");
+  }`
+      : ""
+  }
+  .subtitle-text::before { margin-right: 0.55em; }
+  .subtitle-text::after { margin-left: 0.55em; transform: scaleX(-1); }
 
   .price-slot {
     left: ${priceBox.leftPx}px;
@@ -220,6 +295,50 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     color: #2b1a0d;
     line-height: 1;
   }
+  /* Long prices ("T$3.000") stack the currency over the number, so the number stays readable on the coin. */
+  .price-text.stacked { line-height: 0.95; }
+  .price-text.stacked .currency { display: block; font-size: 0.72em; }
+
+  .circle-seal-slot {
+    left: ${circleSealBox.leftPx}px;
+    top: ${circleSealBox.topPx}px;
+    width: ${circleSealBox.widthPx}px;
+    height: ${circleSealBox.heightPx}px;
+    /* Text must stay inside the stamped ring (::after), not just the disc's bounding box. */
+    padding: ${Math.round(circleSealBox.widthPx * 0.25)}px;
+  }
+  /* Wax body: matte (no glossy hotspot), with an irregular poured edge from the #wax-edge SVG filter. */
+  .circle-seal-slot::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, transparent 58%, rgba(40, 4, 2, 0.28) 72%, transparent 86%),
+      radial-gradient(circle at 42% 36%, #a3342a 0%, #8a221b 42%, #6e1712 72%, #520f0c 100%);
+    filter: url(#wax-edge) drop-shadow(1px 2px 1.5px rgba(40, 18, 6, 0.5));
+  }
+  /* Stamped ring: a dark groove with a light lip, like a seal pressed into the wax. */
+  .circle-seal-slot::after {
+    content: "";
+    position: absolute;
+    inset: 15%;
+    border-radius: 50%;
+    box-shadow:
+      inset 1px 1.5px 1.5px rgba(45, 6, 4, 0.7),
+      0 0.5px 0.5px rgba(255, 196, 170, 0.35);
+  }
+  .circle-seal-text {
+    font-family: "Cinzel", serif;
+    font-weight: ${FONTS.circleSeal.weight};
+    font-variation-settings: "wght" ${FONTS.circleSeal.weight};
+    color: #f2d59b;
+    line-height: 1;
+    white-space: nowrap;
+    /* Debossed numeral: shadow above, light catch below. */
+    text-shadow: 0 -1px 0 rgba(50, 6, 4, 0.75), 0 1px 0 rgba(255, 214, 180, 0.3);
+    z-index: 1;
+  }
 
   .description-slot {
     left: ${descBox.leftPx}px;
@@ -231,7 +350,8 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
   }
   .description-text {
     font-family: "Lora", serif;
-    font-style: italic;
+    /* Upright, like the approved reference: rules text is read, not glanced at. */
+    font-style: normal;
     font-weight: ${FONTS.description.weight};
     width: 100%;
     text-align: center;
@@ -240,22 +360,13 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     word-break: break-word;
   }
 
-  .footer-slot {
-    left: ${footerBox.leftPx}px;
-    top: ${footerBox.topPx}px;
-    width: ${footerBox.widthPx}px;
-    height: ${footerBox.heightPx}px;
-  }
   .footer-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    height: 100%;
+    gap: ${footerGapPx}px;
+    padding: 0 ${FOOTER_CELL_PADDING_PX}px;
   }
   .footer-icon {
-    width: 22px;
-    height: 22px;
+    width: ${footerIconPx}px;
+    height: ${footerIconPx}px;
     flex-shrink: 0;
   }
   .footer-pair {
@@ -264,27 +375,19 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     color: #2b1a0d;
     white-space: nowrap;
   }
-  .footer-separator {
-    display: inline-block;
-    width: ${footerSeparatorPx}px;
-    flex-shrink: 0;
-    position: relative;
-  }
-  .footer-separator::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 15%;
-    bottom: 15%;
-    width: 1px;
-    background: rgba(43, 26, 13, 0.35);
+  /* Fallback set by render.ts when a value can't fit one line even at the
+     minimum size (e.g. "Vontade parcial" in the narrow 3rd compartment). */
+  .footer-pair.footer-wrap {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.05;
   }
 </style>
 </head>
 <body>
   <img class="layer" src="${frameUrl}" alt="" />
   <div class="layer art-layer">
-    <img class="art-image" src="${artUrl}" alt="" />
+    ${artUrl ? `<img class="art-image" src="${artUrl}" alt="" />` : ""}
   </div>
 
   <div class="slot title-slot">
@@ -293,27 +396,25 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
       card.subtitulo
         ? `
     <div class="subtitle-line">
-      <span class="subtitle-flourish">&#10022;</span>
       <div class="subtitle-text-box" style="width:${subtitleTextWidthPx}px;">
         <div id="subtitle-text" class="subtitle-text" data-autofit="single" data-min="${FONTS.subtitulo.minPx}" data-max="${FONTS.subtitulo.maxPx}">${escapeHtml(card.subtitulo)}</div>
       </div>
-      <span class="subtitle-flourish">&#10022;</span>
     </div>`
         : ""
     }
   </div>
 
   <div class="slot price-slot">
-    <div class="price-text" data-autofit="single" data-min="${FONTS.price.minPx}" data-max="${FONTS.price.maxPx}">${escapeHtml(card.preco)}</div>
+    ${priceHtml(card.preco)}
   </div>
+
+  ${circleSeal}
 
   <div class="slot description-slot">
     <div class="description-text" data-autofit="multi" data-min="${FONTS.description.minPx}" data-max="${FONTS.description.maxPx}" data-lh-min="${LINE_HEIGHT.min}" data-lh-max="${LINE_HEIGHT.max}">${escapeHtml(card.descricao)}</div>
   </div>
 
-  <div class="slot footer-slot">
-    ${footerCells}
-  </div>
+  ${footerCells}
 </body>
 </html>`;
 }

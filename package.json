@@ -8,7 +8,9 @@
     "build": "tsx scripts/build.ts",
     "test": "tsx scripts/test.ts",
     "dev": "tsx scripts/dev.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "art": "tsx scripts/art.ts",
+    "sync-drive": "tsx src/sync.ts"
   },
   "dependencies": {
     "chokidar": "^3.6.0",

@@ -1,0 +1,290 @@
+[
+  {
+    "id": "armadura-acolchoada",
+    "tipo": "armadura",
+    "titulo": "Armadura Acolchoada",
+    "subtitulo": "Armadura Leve",
+    "preco": "T$5",
+    "descricao": "Uma túnica almofadada feita em linho ou lã. É a armadura mais leve, mas protege todo o corpo, fornecendo +2 em Fortitude.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+1"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "0"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "2"
+      }
+    ],
+    "imagem": "assets/art/armadura-acolchoada.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  },
+  {
+    "id": "armadura-de-couro",
+    "tipo": "armadura",
+    "titulo": "Armadura de Couro",
+    "subtitulo": "Armadura Leve",
+    "preco": "T$20",
+    "descricao": "O peitoral desta armadura é feito de couro curtido em óleo fervente, para ficar mais rígido, enquanto as demais partes são feitas de couro flexível.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+2"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "0"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "2"
+      }
+    ],
+    "imagem": "assets/art/armadura-de-couro.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  },
+  {
+    "id": "couro-batido",
+    "tipo": "armadura",
+    "titulo": "Couro Batido",
+    "subtitulo": "Armadura Leve",
+    "preco": "T$35",
+    "descricao": "Versão mais pesada da armadura de couro, reforçada com rebites de metal.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+3"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "–1"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "2"
+      }
+    ],
+    "imagem": "assets/art/couro-batido.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  },
+  {
+    "id": "gibao-de-peles",
+    "tipo": "armadura",
+    "titulo": "Gibão de Peles",
+    "subtitulo": "Armadura Leve",
+    "preco": "T$25",
+    "descricao": "Usada principalmente por bárbaros e selvagens, esta armadura é formada por várias camadas de peles e couro de animais.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+4"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "–3"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "2"
+      }
+    ],
+    "imagem": "assets/art/gibao-de-peles.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  },
+  {
+    "id": "couraca",
+    "tipo": "armadura",
+    "titulo": "Couraça",
+    "subtitulo": "Armadura Leve",
+    "preco": "T$500",
+    "descricao": "A mais robusta das armaduras leves, formada por uma placa metálica que protege o peito e as costas, presa sobre um casaco de couro.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+5"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "–4"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "2"
+      }
+    ],
+    "imagem": "assets/art/couraca.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  },
+  {
+    "id": "brunea",
+    "tipo": "armadura",
+    "titulo": "Brunea",
+    "subtitulo": "Armadura Pesada",
+    "preco": "T$50",
+    "descricao": "Colete de couro coberto com plaquetas de metal sobrepostas, como escamas de um peixe. Por ser barata de produzir, é a armadura mais utilizada no Reinado por soldados de infantaria e guardas de castelo.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+5"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "–2"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "5"
+      }
+    ],
+    "imagem": "assets/art/brunea.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  },
+  {
+    "id": "cota-de-malha",
+    "tipo": "armadura",
+    "titulo": "Cota de Malha",
+    "subtitulo": "Armadura Pesada",
+    "preco": "T$150",
+    "descricao": "Longa veste de anéis metálicos interligados, formando uma malha flexível e resistente, que vai até os joelhos.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+6"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "–2"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "5"
+      }
+    ],
+    "imagem": "assets/art/cota-de-malha.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  },
+  {
+    "id": "loriga-segmentada",
+    "tipo": "armadura",
+    "titulo": "Loriga Segmentada",
+    "subtitulo": "Armadura Pesada",
+    "preco": "T$250",
+    "descricao": "Composta por tiras horizontais de metal, esta armadura pesada é muito utilizada por legionários do Império de Tauron.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+7"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "–3"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "5"
+      }
+    ],
+    "imagem": "assets/art/loriga-segmentada.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  },
+  {
+    "id": "meia-armadura",
+    "tipo": "armadura",
+    "titulo": "Meia Armadura",
+    "subtitulo": "Armadura Pesada",
+    "preco": "T$600",
+    "descricao": "Uma cota de malha reforçada com placas de metal.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+8"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "–4"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "5"
+      }
+    ],
+    "imagem": "assets/art/meia-armadura.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  },
+  {
+    "id": "armadura-completa",
+    "tipo": "armadura",
+    "titulo": "Armadura Completa",
+    "subtitulo": "Armadura Pesada",
+    "preco": "T$3.000",
+    "descricao": "A mais forte e pesada das armaduras, formada por placas de metal forjadas e encaixadas de modo a cobrir o corpo inteiro. Inclui uma túnica acolchoada para ser usada sob as placas. Correias e fivelas distribuem o peso da armadura pelo corpo inteiro. Por ser feita sob medida, um ferreiro cobra T$200 para ajustá-la a um novo usuário.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+10"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "–5"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "5"
+      }
+    ],
+    "imagem": "assets/art/armadura-completa.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5). Última frase: nota do livro (feita sob medida, T$200 para ajustar), pela regra \"livro prevalece\"."
+  },
+  {
+    "id": "escudo-leve",
+    "tipo": "armadura",
+    "titulo": "Escudo Leve",
+    "subtitulo": "Escudo",
+    "preco": "T$5",
+    "descricao": "Tipicamente feito de madeira, este escudo é amarrado no antebraço, deixando a mão livre. Você pode carregar um objeto na mão que empunha o escudo, mas não manusear uma arma.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+1"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "–1"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "1"
+      }
+    ],
+    "imagem": "assets/art/escudo-leve.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  },
+  {
+    "id": "escudo-pesado",
+    "tipo": "armadura",
+    "titulo": "Escudo Pesado",
+    "subtitulo": "Escudo",
+    "preco": "T$15",
+    "descricao": "Normalmente feito de aço, este escudo é preso ao antebraço e também deve ser empunhado com firmeza, impedindo o usuário de usar aquela mão.",
+    "atributos": [
+      {
+        "rotulo": "Defesa",
+        "valor": "+2"
+      },
+      {
+        "rotulo": "Penalidade",
+        "valor": "–2"
+      },
+      {
+        "rotulo": "Carga",
+        "valor": "2"
+      }
+    ],
+    "imagem": "assets/art/escudo-pesado.png",
+    "_fonte": "Doc da mesa (Cartas Rpg, Armaduras e escudos); números conferidos com o livro (Tabela 3-5)."
+  }
+]

@@ -32,9 +32,10 @@ export const PATHS = {
 };
 
 // ---------------------------------------------------------------------------
-// Coin side: the frame comes in two mirrored variants (price coin top-right
-// vs top-left). Picking a side selects both the frame image AND mirrors
-// SLOTS.price horizontally — see FRAME_PATHS / getPriceSlot below.
+// Coin side: the frame comes in two variants (price coin top-right vs
+// top-left). frame-left.png is the painted original (v2, 22/11/2026: taller
+// description scroll); frame-right.png is its exact horizontal mirror, so
+// getSlotsForSide() mirrors every box with no manual nudge.
 // ---------------------------------------------------------------------------
 
 export type CoinSide = "left" | "right";
@@ -122,20 +123,49 @@ export interface BoxMm {
 // re-measure before touching these numbers.
 
 export const SLOTS = {
-  /** Title band (top scroll). */
-  title: { xMm: 8, yMm: 5, widthMm: 58, heightMm: 13 } as BoxMm,
+  /** Title band: only the flat part of the top scroll (its rolls' inner edges sit at ~10.6/62.2mm on both frames). */
+  // y: inside the scroll's painted top edge (6–6.9mm) and bottom edge (~18.6mm).
+  title: { xMm: 11.5, yMm: 6.8, widthMm: 51, heightMm: 11.5 } as BoxMm,
 
-  /** Item artwork window (center). */
-  art: { xMm: 11, yMm: 20, widthMm: 40, heightMm: 40 } as BoxMm,
+  /**
+   * Item artwork window = the free space between the title scroll, the
+   * description scroll, the left rail and the coin column (right edge 1mm clear
+   * of the coin). Top/bottom stop short of the title scroll's lower curl
+   * (~21mm) and the description scroll's corner roll (~62.8mm), so the corners
+   * never sit on painted rolls. object-fit: contain centers the object in it.
+   */
+  art: { xMm: 6.5, yMm: 21.8, widthMm: 45.5, heightMm: 40.8 } as BoxMm,
 
-  /** Description band (bottom scroll). */
-  description: { xMm: 7, yMm: 74, widthMm: 60, heightMm: 21 } as BoxMm,
- 
+  /**
+   * Description band: the flat part of the tall bottom scroll (frame v2:
+   * scroll top edge 64.7mm, was 72.1mm). Left edge clears the corner roll
+   * (painted down to ~75mm, inner edge 9.1mm on this side); right edge stays
+   * ~1mm inside the scroll's shaded side; bottom stays above the footer
+   * scroll's top edge (94.6mm).
+   */
+  description: { xMm: 9.8, yMm: 66.6, widthMm: 57.4, heightMm: 27.2 } as BoxMm,
+
   /** Price coin: hangs below the title scroll into the open area, not glued to the top edge. */
-  price: { xMm: 52, yMm: 22.5, widthMm: 17, heightMm: 17 } as BoxMm,
+  // = the painted coin's disc (~53.6–68.6 × 24–39mm), not past it into the torn border.
+  price: { xMm: 53.6, yMm: 24, widthMm: 15, heightMm: 15 } as BoxMm,
 
-  /** Footer strip with 3 attribute cells — its own small scroll below the description band. */
-  footer: { xMm: 5, yMm: 94, widthMm: 64, heightMm: 9 } as BoxMm,
+  /**
+   * Potion spell-circle seal: hangs right below the price coin, centered on
+   * the same vertical axis (price box center = 61.1mm), in the side rail the
+   * art window already leaves free for the coin (art ends at x=52mm, so this
+   * never touches the art). The opposite rail is only ~11mm wide including
+   * the torn border — a legible seal there would cut into the art window.
+   */
+  circleSeal: { xMm: 55.6, yMm: 41.5, widthMm: 11, heightMm: 11 } as BoxMm,
+
+  /**
+   * Footer scroll below the description band: the flat band between the
+   * shadows of its two end rolls. Only its y/height drive the layout — the
+   * three cells' horizontal spans come from FOOTER_CELLS_MM (per frame side),
+   * because the dividers between them are painted in the frame art.
+   */
+  // y: between the footer scroll's painted top (94.6mm) and bottom (102.3mm) edges.
+  footer: { xMm: 10.8, yMm: 95.0, widthMm: 53.3, heightMm: 7.0 } as BoxMm,
 } as const;
 
 export interface BoxPx {
@@ -161,25 +191,14 @@ function mirrorBoxMm(box: BoxMm): BoxMm {
 }
 
 /**
- * Price gets the pure mirror plus a small manual nudge (-1mm x, +1mm y),
- * from fine-tuning the left-coin frame against its actual coin artwork —
- * the two frame images aren't pixel-perfect mirrors of each other, so the
- * plain formula was off by a hair. Re-measure with the percentage-grid
- * technique (see git history / scripts/grid-overlay.ts) if frame-left.png
- * ever changes.
- */
-function mirrorPriceBoxMm(box: BoxMm): BoxMm {
-  return { xMm: CARD_WIDTH_MM - box.xMm - box.widthMm - 1, yMm: box.yMm + 1, widthMm: box.widthMm, heightMm: box.heightMm };
-}
-
-/**
- * Resolves ALL of SLOTS for the given coin side. 'right' is the calibrated
- * original. 'left' mirrors every box horizontally — not just price. This
- * matters because SLOTS.art isn't centered (it's shifted toward the side
- * away from the coin, keeping a deliberate ~1mm clearance from it); mirroring
- * only the price and leaving art in place would collide the art box into
- * the coin on the left-coin frame. Mirroring symmetric boxes (title,
- * description, footer) is a no-op, so this is safe to apply uniformly.
+ * Resolves ALL of SLOTS for the given coin side. 'right' is SLOTS as written.
+ * 'left' mirrors every box horizontally — not just price — because
+ * frame-right.png is the exact mirror of frame-left.png. This matters because
+ * SLOTS.art isn't centered (it's shifted toward the side away from the coin,
+ * keeping a deliberate ~1mm clearance from it); mirroring only the price and
+ * leaving art in place would collide the art box into the coin on the
+ * left-coin frame. Mirroring symmetric boxes (title, description) is a no-op.
+ * The footer's painted dividers are mirrored too — see FOOTER_CELLS_MM.
  */
 export function getSlotsForSide(side: CoinSide): typeof SLOTS {
   if (side === "right") return SLOTS;
@@ -187,13 +206,62 @@ export function getSlotsForSide(side: CoinSide): typeof SLOTS {
     title: mirrorBoxMm(SLOTS.title),
     art: mirrorBoxMm(SLOTS.art),
     description: mirrorBoxMm(SLOTS.description),
-    price: mirrorPriceBoxMm(SLOTS.price),
+    price: mirrorBoxMm(SLOTS.price),
+    circleSeal: mirrorBoxMm(SLOTS.circleSeal),
     footer: mirrorBoxMm(SLOTS.footer),
   };
 }
 
+/**
+ * The footer scroll has two dividers PAINTED in the frame art, splitting it
+ * into three compartments; each footer value is centered in its compartment.
+ * Measured on the frame PNGs scaled to the 874×1240 canvas (darkest narrow
+ * columns across the scroll's mid-band; outer edges = where the end rolls'
+ * shadow starts). The dividers are not centered (26.4/48.6mm on frame-left),
+ * so frame-right, its mirror, has them at 25.4/47.6mm and the cells in
+ * reverse order. Re-measure if frame-left.png changes.
+ */
+export const FOOTER_CELLS_MM: Record<CoinSide, readonly { xMm: number; widthMm: number }[]> = {
+  right: [
+    { xMm: 10.8, widthMm: 14.6 },
+    { xMm: 25.4, widthMm: 22.2 },
+    { xMm: 47.6, widthMm: 16.5 },
+  ],
+  left: [
+    { xMm: 9.9, widthMm: 16.5 },
+    { xMm: 26.4, widthMm: 22.2 },
+    { xMm: 48.6, widthMm: 14.6 },
+  ],
+};
+
 /** Padding subtracted from every slot's box before text is allowed to sit, in px. */
 export const TEXT_SAFE_PADDING_PX = 6;
+
+/**
+ * Horizontal breathing room inside each footer compartment (FOOTER_CELLS_MM),
+ * in px per side. Larger than TEXT_SAFE_PADDING_PX because the compartment
+ * edges are painted dividers / roll shadows: at 6px (and still at 10px) a
+ * value that filled the narrow third compartment ("1 criatura") looked glued
+ * to the divider. 14px ≈ 1.2mm printed.
+ */
+export const FOOTER_CELL_PADDING_PX = 14;
+
+/**
+ * Footer values with a space may wrap into 2 centered lines (render.ts
+ * fitFooterValue) — only when that beats one line's font size by this factor,
+ * since one line reads better at equal size.
+ */
+export const FOOTER_WRAP_MIN_GAIN = 1.15;
+
+/**
+ * Shown (with no icon) in a footer cell whose valor is "" — e.g. a potion
+ * without Resistência, or the ammunition's 3rd cell. Owner's call
+ * (22/11/2026): "no espaço vazio coloque '-'". En dash, because a lone
+ * hyphen is a speck at footer size.
+ */
+export const FOOTER_EMPTY_VALUE = "–";
+/** In 2-line mode the footer font max is this fraction of FONTS.footerValue.maxPx (breathing room in the band). */
+export const FOOTER_WRAP_MAX_RATIO = 0.8;
 
 /** Art gets extra breathing room from the scrolls above/below it, in px. */
 export const ART_SAFE_PADDING_PX = 10;
@@ -230,14 +298,18 @@ export const FONTS = {
   title: {
     family: "Cinzel",
     file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
-    weight: 600,
+    weight: 800,
     minPx: 26,
-    maxPx: 56,
+    // Deliberately low ceiling = one standard title size across the catalog
+    // (59 of 61 titles sit exactly here; only the 2 longest shrink, to ~47px).
+    // A higher max made short titles huge and pushed the subtitle onto the
+    // scroll's lower edge, while long ones left a big gap.
+    maxPx: 50,
   },
   subtitulo: {
     family: "Cinzel",
     file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
-    weight: 500,
+    weight: 600,
     minPx: 16,
     maxPx: 26,
   },
@@ -251,9 +323,16 @@ export const FONTS = {
   price: {
     family: "Cinzel",
     file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
-    weight: 700,
+    weight: 800,
     minPx: 18,
-    maxPx: 34,
+    maxPx: 54,
+  },
+  circleSeal: {
+    family: "Cinzel",
+    file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
+    weight: 700,
+    minPx: 20,
+    maxPx: 46,
   },
   footerValue: {
     family: "Cinzel",
@@ -294,25 +373,81 @@ export interface FooterAttrDefault {
 // but `rotulo` stays here as self-documentation of what each position means
 // per type. Position 3 is always Peso: the price already has its own coin
 // slot, so repeating it in the footer would be redundant.
+/**
+ * Card types whose footer prints "Rótulo: valor" next to the icon, as on the
+ * approved reference ("Dano: 1d4 | Crítico: 19×2 | Carga: 1"). Potions stay
+ * value-only: their values are words ("Cena", "Vontade anula") that already
+ * say what they are, and labels would not fit the narrow 3rd compartment.
+ */
+// Off by default: on frame v2 the narrowest compartment (14.6mm) drags the
+// levelled weapon footer down to ~5-6pt with labels. Put "arma" here to turn them on.
+export const FOOTER_LABEL_TYPES: readonly CardType[] = [];
+
 export const TYPE_FOOTER_DEFAULTS: Record<CardType, FooterAttrDefault[]> = {
   arma: [
     { icone: "broadsword.svg", rotulo: "Dano" },
     { icone: "star-formation.svg", rotulo: "Crítico" },
-    { icone: "weight.svg", rotulo: "Peso" },
+    { icone: "weight.svg", rotulo: "Carga" },
+  ],
+  // Ammunition packs: "×20" (no icon), Carga, and a free 3rd cell.
+  municao: [
+    { icone: "", rotulo: "Qtd" },
+    { icone: "weight.svg", rotulo: "Carga" },
+    { icone: "", rotulo: "" },
+  ],
+  // Armor and shields (doc template: Bônus de Defesa, Penalidade, Carga; price on the coin).
+  armadura: [
+    { icone: "checked-shield.svg", rotulo: "Defesa" },
+    { icone: "armor-downgrade.svg", rotulo: "Penalidade" },
+    { icone: "weight.svg", rotulo: "Carga" },
   ],
   item: [
     { icone: "backpack.svg", rotulo: "Peso" },
     { icone: "star-formation.svg", rotulo: "Raridade" },
     { icone: "coins.svg", rotulo: "Custo" },
   ],
+  // Approved 22/11/2026. Potions have no weight. The kind (Poção/Óleo/Granada)
+  // is the subtitle. No icon exists yet for Alvo/Área or Resistência, and an
+  // empty Resistência ("") leaves its compartment blank.
   pocao: [
-    { icone: "potion-ball.svg", rotulo: "Efeito" },
-    { icone: "hourglass.svg", rotulo: "Duração" },
-    { icone: "weight.svg", rotulo: "Peso" },
+    { icone: "", rotulo: "Duração" },
+    { icone: "", rotulo: "Alvo/Área" },
+    { icone: "", rotulo: "Resistência" },
   ],
 };
 
 export const FOOTER_CELL_COUNT = 3;
+
+/**
+ * Type icon (assets/icons/), drawn at the inner end of each subtitle flourish
+ * ("—⚔ ARMA ⚔—") so the card types read apart at a glance. Same game-icons
+ * family as the footer icons. A subtitle can override its type's icon
+ * (a shield is an "armadura" card, but reads better with a shield).
+ */
+export const TYPE_ICONS: Record<CardType, string> = {
+  arma: "tipo-crossed-swords.svg",
+  municao: "tipo-arrow-cluster.svg",
+  armadura: "tipo-breastplate.svg",
+  item: "tipo-knapsack.svg",
+  pocao: "tipo-round-bottom-flask.svg",
+};
+export const SUBTITLE_ICONS: Record<string, string> = {
+  Escudo: "tipo-shield.svg",
+};
+
+/** Output subfolder per card type: output/cards/{pasta}/{id}.png and output/print/{pasta}/sheet-{n}.pdf. */
+export const TYPE_FOLDERS: Record<CardType, string> = {
+  arma: "armas",
+  municao: "municoes",
+  armadura: "armaduras",
+  item: "itens",
+  pocao: "pocoes",
+};
+
+/** Where the definitive build writes a card's PNG. */
+export function cardOutputPath(card: { id: string; tipo: CardType }): string {
+  return path.join(PATHS.outputCards, TYPE_FOLDERS[card.tipo], `${card.id}.png`);
+}
 
 // ---------------------------------------------------------------------------
 // Placeholder frame generation (only used when assets/frame/frame.png is

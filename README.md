@@ -42,20 +42,25 @@ com caixas coloridas mostrando cada slot — isso NÃO é arte aprovada.
 
 ### 2. `pnpm test` — comparação rápida (não é o lote final)
 
-Renderiza **uma única carta de exemplo** (a primeira de `data/cards.json`)
-nos dois lados possíveis da moeda, para `output/test/`:
+Renderiza as cartas de amostra nos dois lados possíveis da moeda, em
+`output/test/{id}-moeda-direita.png` e `{id}-moeda-esquerda.png`:
 
-- `exemplo-moeda-direita.png`
-- `exemplo-moeda-esquerda.png`
+```bash
+pnpm test                     # 4 poções de amostra: curar-ferimentos-i, sono, compreensao, visao-mistica (as de texto mais longo)
+pnpm test -- flechas katana   # qualquer carta do catálogo, pelo id
+```
 
-Não toca em `output/cards/` nem `output/print/`. É só pra decidir/conferir
-visualmente qual frame usar antes de rodar o lote de verdade.
+Não toca em `output/cards/` nem `output/print/`. É só pra conferir
+visualmente antes de rodar o lote de verdade.
 
 ### 3. `pnpm build` — gerar o lote definitivo
 
-Renderiza cada carta de `data/cards.json` em `output/cards/{id}.png` e monta
-as folhas de impressão A4 (8 cartas A7 por folha, com marcas de corte) em
-`output/print/sheet-{n}.pdf`.
+Renderiza cada carta do catálogo (`data/cards.json` + `data/armaduras.json` +
+`data/pocoes-*.json`) em `output/cards/{pasta}/{id}.png` e monta as folhas de
+impressão A4 (8 cartas A7 por folha, com marcas de corte) em
+`output/print/{pasta}/sheet-{n}.pdf`. Uma pasta por tipo: `armas`, `municoes`,
+`armaduras`, `itens`, `pocoes`; cada tipo tem as próprias folhas, para
+imprimir separado. As folhas do build anterior são apagadas antes.
 
 Como o frame existe em duas versões espelhadas (moeda à esquerda ou à
 direita — veja abaixo), essa é a build **definitiva** e sempre exige escolher
@@ -65,6 +70,7 @@ um lado:
 pnpm build -- right          # ou: pnpm build -- left
 pnpm build -- --side=left    # forma alternativa, mesma coisa
 pnpm build                   # sem argumento: pergunta interativamente no terminal
+pnpm build -- right --ids=balas,flechas   # só essas cartas (o catálogo inteiro continua validado)
 ```
 
 Se o texto de alguma carta não couber em um slot mesmo no tamanho mínimo de
@@ -78,9 +84,36 @@ Observa `data/`, `src/` e `assets/frame/` e re-executa o build a cada
 mudança. Aceita um lado opcional (`pnpm dev -- left`, padrão `right`) mas
 **nunca pergunta** — é um preview rápido, não a build definitiva.
 
+### 5. `pnpm art` — arte do item gerada por IA (Gemini)
+
+Gera a ilustração de cada item a partir de `data/art-prompts.json`: `estilo`
+(guia de estilo, em inglês), `evitar` e `itens[id]` (o objeto). O script pede
+o objeto sobre fundo branco, remove o fundo (flood-fill a partir das bordas,
+então o brilho branco dentro do vidro não vira buraco), apara a imagem e
+salva em `assets/art/{id}.png`.
+
+```bash
+pnpm art                          # todo id do art-prompts.json que ainda não tem arte
+pnpm art -- sono luz              # só esses
+pnpm art -- sono --variacoes=3    # 3 candidatas em output/arte/, com prévia da carta nos dois lados
+pnpm art -- --aprovar=sono:2      # instala a candidata 2 em assets/art/sono.png
+pnpm art -- sono --refazer        # gera de novo mesmo se já houver arte
+```
+
+Precisa de uma chave da API do Gemini em `.env` na raiz (o `.env` está no
+`.gitignore`; nunca commitar):
+
+```
+GEMINI_API_KEY=<sua chave>
+# opcional: GEMINI_IMAGE_MODEL=gemini-nano-banana-2.1
+# opcional: DRIVE_SYNC_DIR=G:\Meu Drive\Cartas RPG  (o build espelha output/print/ em imprimir/ e output/cards/ em cards/; pnpm sync-drive faz só a cópia)
+```
+
 ## Lado da moeda (frame espelhado)
 
-O frame aprovado existe em duas versões, espelhadas horizontalmente:
+O frame aprovado existe em duas versões, espelhadas horizontalmente. Desde a v2
+(22/11/2026, pergaminho da descrição mais alto), `frame-left.png` é a arte
+pintada e `frame-right.png` é o espelho exato dela:
 
 - `assets/frame/frame-right.png` — moeda de preço no canto superior direito.
 - `assets/frame/frame-left.png` — moeda no canto superior esquerdo.
@@ -93,8 +126,9 @@ escolhem qual frame carregar através desse mesmo mecanismo.
 
 ## Como trocar o frame
 
-1. Substitua `assets/frame/frame-right.png` (e opcionalmente `frame-left.png`,
-   sua versão espelhada) pela arte aprovada do pergaminho.
+1. Substitua `assets/frame/frame-left.png` pela arte aprovada do pergaminho e
+   gere `frame-right.png` como o espelho horizontal exato dela. Depois meça de
+   novo `SLOTS` e `FOOTER_CELLS_MM` (`src/config.ts`) em cima de um render.
    - O frame é **totalmente opaco** — a arte do item é desenhada **por cima**
      dele (com uma sombra própria), não atrás de uma janela recortada. As
      faixas de título/descrição/rodapé já vêm no próprio PNG; o texto é
@@ -136,24 +170,40 @@ Tudo que é calibrável vive em `src/config.ts`:
   marcas de corte na posição correta — mas sacrifica o encaixe perfeito
   8-up (0 folga) da folha A4.
 
-## Formato de `data/cards.json`
+## Formato dos dados
+
+O catálogo é `data/cards.json` (armas e munições), `data/armaduras.json`
+(armaduras e escudos) e todo arquivo `data/pocoes-*.json` (ex.:
+`data/pocoes-1-circulo.json`, as 17 poções de 1º círculo: textos da mestre,
+literais, e os que ela não escreveu no padrão dela, conferidos com o livro;
+o campo `_fonte` diz qual é qual). Todos são
+arrays de cartas no mesmo formato e são validados juntos; um `id` repetido
+entre arquivos é erro.
 
 ```jsonc
 {
   "id": "espada-longa",           // único, usado no nome do arquivo de saída
-  "tipo": "arma",                 // "arma" | "item" | "pocao" — controla os ícones/ordem padrão do rodapé
+  "tipo": "arma",                 // "arma" | "municao" | "armadura" | "item" | "pocao" — controla o ícone do tipo, a pasta de saída e o rodapé padrão
   "titulo": "Espada Longa",
-  "subtitulo": "Arma",            // opcional, aparece abaixo do título com florões
-  "preco": "T$75",                // vai na moeda
-  "descricao": "Uma lâmina reta e equilibrada...",
+  "subtitulo": "Arma",            // opcional (obrigatório em poção: "Poção" | "Óleo" | "Granada"; em armadura: "Armadura Leve" | "Armadura Pesada" | "Escudo")
+  "preco": "T$15",                // vai na moeda
+  "descricao": "Arma típica de soldados e guerreiros...",
   "atributos": [                  // EXATAMENTE 3 entradas (uma por célula do rodapé)
-    { "valor": "1d8" },            // arma: [Dano, Crítico, Peso]. poção: [Efeito, Duração, Peso].
+    { "valor": "1d8" },            // arma: [Dano, Crítico, Carga]. poção: [Duração, Alvo/Área, Resistência]
     { "valor": "19x2" },           // icone/rotulo herdam de TYPE_FOOTER_DEFAULTS[tipo][i] se omitidos
-    { "valor": "1.5kg" }
+    { "valor": "1" }               // "" mostra "–" (sem ícone) na célula
   ],
-  "imagem": "assets/art/espada-longa.png" // caminho relativo à raiz do projeto
+  "imagem": "assets/art/espada-longa.png", // caminho relativo à raiz; se o arquivo não existir, a janela da arte fica vazia (com aviso)
+  "_fonte": "..."                 // opcional, só documentação (nunca é desenhado)
 }
 ```
+
+Poções (`"tipo": "pocao"`) também exigem `"circulo"` (1 a 5, vira o selo
+abaixo da moeda) e `"pm"` (custo em PM). O build avisa, sem falhar, se o
+preço não for T$30 × pm². O círculo nunca é deduzido do preço.
+
+Quando o material da mesa diverge do livro Tormenta20, vale o livro; valor
+duplo do livro ("1d10/1d12") → a carta mostra o maior.
 
 ### `data/cards-to-reapeat.json` — repetir cartas na impressão
 
@@ -204,5 +254,7 @@ cartas, então não precisam de marca separada.
 - **Frame** (`assets/frame/frame-right.png` / `frame-left.png`): arte
   aprovada, gerada com auxílio de IA (Canva) a partir da referência em
   `assets/inspiration/exemplo-carta-pronta.jpg`.
-- **Arte dos itens**: a maioria das cartas em `data/cards.json` ainda não tem
-  arte própria em `assets/art/` — falta gerar/adicionar por item.
+- **Arte dos itens**: a maioria das cartas ainda não tem arte própria em
+  `assets/art/`. Direção decidida: arte gerada por IA, de forma automatizada,
+  no estilo da referência (`assets/inspiration/exemplo-carta-pronta.jpg`). Os
+  ícones atuais são provisórios.
