@@ -15,7 +15,7 @@
       },
       {
         "rotulo": "Alvo/Área",
-        "valor": "1 alimento ou bebida"
+        "valor": "Alimento p/ 1 criatura"
       },
       {
         "rotulo": "Resistência",
@@ -41,7 +41,7 @@
       },
       {
         "rotulo": "Alvo/Área",
-        "valor": "3m ou 1 objeto"
+        "valor": "Quadrado 3m ou 1 objeto"
       },
       {
         "rotulo": "Resistência",
@@ -67,7 +67,7 @@
       },
       {
         "rotulo": "Alvo/Área",
-        "valor": "1 objeto"
+        "valor": "1 arma"
       },
       {
         "rotulo": "Resistência",
@@ -93,7 +93,7 @@
       },
       {
         "rotulo": "Alvo/Área",
-        "valor": "1 criatura"
+        "valor": "1 criatura ou texto"
       },
       {
         "rotulo": "Resistência",
@@ -223,7 +223,7 @@
       },
       {
         "rotulo": "Alvo/Área",
-        "valor": "Até 6m"
+        "valor": "Nuvem 6m raio"
       },
       {
         "rotulo": "Resistência",
@@ -327,7 +327,7 @@
       },
       {
         "rotulo": "Alvo/Área",
-        "valor": "1 criatura"
+        "valor": "1 humanoide"
       },
       {
         "rotulo": "Resistência",
@@ -379,7 +379,7 @@
       },
       {
         "rotulo": "Alvo/Área",
-        "valor": "1 objeto grande ou menor"
+        "valor": "1 objeto Grande ou menor"
       },
       {
         "rotulo": "Resistência",
