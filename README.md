@@ -46,7 +46,7 @@ Renderiza as cartas de amostra nos dois lados possíveis da moeda, em
 `output/test/{id}-moeda-direita.png` e `{id}-moeda-esquerda.png`:
 
 ```bash
-pnpm test                     # as 2 poções de amostra: curar-ferimentos-i + "sono" (texto longo, só de teste)
+pnpm test                     # 4 poções de amostra: curar-ferimentos-i, sono, compreensao, visao-mistica (as de texto mais longo)
 pnpm test -- flechas katana   # qualquer carta do catálogo, pelo id
 ```
 
@@ -167,7 +167,9 @@ Tudo que é calibrável vive em `src/config.ts`:
 ## Formato dos dados
 
 O catálogo é `data/cards.json` mais todo arquivo `data/pocoes-*.json` (ex.:
-`data/pocoes-1-circulo.json`, com os textos literais da mestre). Todos são
+`data/pocoes-1-circulo.json`, as 17 poções de 1º círculo: textos da mestre,
+literais, e os que ela não escreveu no padrão dela, conferidos com o livro;
+o campo `_fonte` diz qual é qual). Todos são
 arrays de cartas no mesmo formato e são validados juntos; um `id` repetido
 entre arquivos é erro.
 

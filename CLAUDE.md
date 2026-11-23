@@ -10,7 +10,7 @@ pnpm exec playwright install chromium   # first time only, or if browsers are mi
 pnpm exec tsc --noEmit                  # typecheck — there is no separate lint or test suite
 
 pnpm template                           # renders ONLY the frame to output/template-blank.png for approval
-pnpm test                                # the two potion samples (curar-ferimentos-i + the long-text "sono" fixture), both coin sides → output/test/{id}-moeda-{direita,esquerda}.png
+pnpm test                                # 4 catalog potion samples (curar-ferimentos-i, sono, compreensao, visao-mistica — the longest texts), both coin sides → output/test/{id}-moeda-{direita,esquerda}.png
 pnpm test -- flechas katana             # same, for any catalog card id(s)
 pnpm build -- right                     # DEFINITIVE print batch: output/cards/{id}.png + output/print/sheet-{n}.pdf
 pnpm build -- left                      # same, using the left-coin mirrored frame

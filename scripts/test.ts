@@ -2,8 +2,8 @@
  * `pnpm test` — quick visual comparison, NOT the definitive build. Renders
  * each sample with BOTH coin sides to output/test/{id}-moeda-{direita,esquerda}.png.
  *
- *   pnpm test                 → the two potion samples: curar-ferimentos-i (catalog)
- *                               + sono (long-text fixture below, not in the catalog)
+ *   pnpm test                 → the potion samples (DEFAULT_SAMPLE_IDS): the shortest
+ *                               text, a resistance in the footer, and the two longest texts
  *   pnpm test -- flechas      → any catalog card(s) by id instead
  *
  * Never touches output/cards/ or output/print/ — for the real, print-ready
@@ -15,42 +15,21 @@ import { pathToFileURL } from "node:url";
 import { loadCatalog } from "../src/catalog.js";
 import { PATHS } from "../src/config.js";
 import { renderSingleCard } from "../src/render.js";
-import type { Card, PotionCard } from "../src/types.js";
-import { validateCards } from "../src/validation.js";
+import type { Card } from "../src/types.js";
 
-const LONG_TEXT_POTION: PotionCard = {
-  id: "sono",
-  tipo: "pocao",
-  titulo: "Sono",
-  subtitulo: "Poção",
-  circulo: 1,
-  pm: 1,
-  preco: "T$30",
-  descricao:
-    "Um cansaço místico recai sobre o alvo. Se falhar na resistência, ele fica inconsciente e caído ou, se estiver envolvido em combate ou outra situação perigosa, fica exausto por 1 rodada, depois fatigado. Em ambos os casos, se passar, o alvo fica fatigado por 1d4 rodadas.",
-  atributos: [{ valor: "Cena" }, { valor: "1 criatura" }, { valor: "Vontade parcial" }],
-  imagem: "assets/art/pocao-cura.png",
-};
+// Extremes of the potion layout: shortest text, a long resistance in the narrow
+// footer cell, and the two longest descriptions (autofit stress test).
+const DEFAULT_SAMPLE_IDS = ["curar-ferimentos-i", "sono", "compreensao", "visao-mistica"];
 
 export async function runTest(ids: string[] = []): Promise<void> {
   console.log("=== TESTE — comparação lado a lado (não é a build definitiva) ===");
 
   const { cards: catalog } = await loadCatalog();
 
-  let samples: Card[];
-  if (ids.length > 0) {
-    const unknown = ids.filter((id) => !catalog.some((card) => card.id === id));
-    if (unknown.length > 0) throw new Error(`id(s) not in the catalog: ${unknown.join(", ")}`);
-    samples = catalog.filter((card) => ids.includes(card.id));
-  } else {
-    const healingPotion = catalog.find((card) => card.id === "curar-ferimentos-i");
-    if (!healingPotion || healingPotion.tipo !== "pocao") {
-      throw new Error('data/cards.json must contain the potion "curar-ferimentos-i".');
-    }
-    // The catalog card was already validated above; validating it again would print its warnings twice.
-    validateCards([LONG_TEXT_POTION]);
-    samples = [healingPotion, LONG_TEXT_POTION];
-  }
+  const wanted = ids.length > 0 ? ids : DEFAULT_SAMPLE_IDS;
+  const unknown = wanted.filter((id) => !catalog.some((card) => card.id === id));
+  if (unknown.length > 0) throw new Error(`id(s) not in the catalog: ${unknown.join(", ")}`);
+  const samples: Card[] = catalog.filter((card) => wanted.includes(card.id));
 
   await fs.mkdir(PATHS.outputTest, { recursive: true });
 

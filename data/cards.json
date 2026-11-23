@@ -1,21 +1,5 @@
 [
   {
-    "id": "curar-ferimentos-i",
-    "tipo": "pocao",
-    "titulo": "Curar Ferimentos I",
-    "subtitulo": "Poção",
-    "circulo": 1,
-    "pm": 1,
-    "preco": "T$30",
-    "descricao": "Essa poção canaliza luz que recupera 2d8+2 pontos de vida na criatura que tomou. Curar Ferimentos anula Infligir Ferimentos.",
-    "atributos": [
-      { "valor": "Instantânea" },
-      { "valor": "1 criatura" },
-      { "valor": "" }
-    ],
-    "imagem": "assets/art/pocao-cura.png"
-  },
-  {
     "id": "adaga",
     "tipo": "arma",
     "titulo": "Adaga",

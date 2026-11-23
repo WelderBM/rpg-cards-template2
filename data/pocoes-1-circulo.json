@@ -1,0 +1,444 @@
+[
+  {
+    "id": "abencoar-alimentos",
+    "tipo": "pocao",
+    "titulo": "Abençoar Alimentos",
+    "subtitulo": "Óleo",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Você purifica e abençoa uma porção de comida ou dose de bebida. Isso torna um alimento sujo, estragado ou envenenado próprio para consumo. Além disso, se for consumido até o final da duração, o alimento oferece 5 PV temporários ou 1 PM temporário (além de quaisquer bônus que já oferecesse). Bônus de alimentação duram um dia e cada personagem só pode receber um bônus de alimentação por dia.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 alimento ou bebida"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/abencoar-alimentos.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "area-escorregadia",
+    "tipo": "pocao",
+    "titulo": "Área Escorregadia",
+    "subtitulo": "Granada",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Esta poção recobre uma superfície com uma substância gordurosa e escorregadia. Criaturas na área devem passar na resistência para não cair. Nas rodadas seguintes, criaturas que tentem movimentar-se pela área devem fazer testes de Acrobacia para equilíbrio (CD 10). Área Escorregadia pode tornar um item escorregadio. Uma criatura segurando um objeto afetado deve passar na resistência para não deixar o item cair cada vez que usá-lo.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "3m ou 1 objeto"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": "Reflexos"
+      }
+    ],
+    "imagem": "assets/art/area-escorregadia.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "arma-magica",
+    "tipo": "pocao",
+    "titulo": "Arma Mágica",
+    "subtitulo": "Óleo",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "A arma é considerada mágica e fornece +1 nos testes de ataque e rolagens de dano (isso conta como um bônus de encanto). Caso você esteja empunhando a arma, pode usar seu atributo-chave de magias em vez do atributo original nos testes de ataque (não cumulativo com efeitos que somam este atributo).",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 objeto"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/arma-magica.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "compreensao",
+    "tipo": "pocao",
+    "titulo": "Compreensão",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Essa poção lhe confere compreensão sobrenatural. Você pode tocar um texto e entender as palavras mesmo que não conheça o idioma. Se tocar numa criatura inteligente, pode se comunicar com ela mesmo que não tenham um idioma em comum. Se tocar uma criatura não inteligente, como um animal, pode perceber seus sentimentos. Você também pode gastar uma ação de movimento para ouvir os pensamentos de uma criatura tocada (você “ouve” o que o alvo está pensando), mas um alvo involuntário tem direito a um teste de Vontade para proteger seus pensamentos e evitar este efeito.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 criatura"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": "Vontade anula"
+      }
+    ],
+    "imagem": "assets/art/compreensao.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "curar-ferimentos-i",
+    "tipo": "pocao",
+    "titulo": "Curar Ferimentos I",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Essa poção canaliza luz que recupera 2d8+2 pontos de vida na criatura que tomou. Curar Ferimentos anula Infligir Ferimentos.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Instantânea"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 criatura"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/curar-ferimentos-i.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "disfarce-ilusorio",
+    "tipo": "pocao",
+    "titulo": "Disfarce Ilusório",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Você muda a aparência do alvo, incluindo seu equipamento. Isso inclui altura, peso, tom de pele, cor de cabelo, timbre de voz etc. O alvo recebe +10 em testes de Enganação para disfarce. O alvo não recebe novas habilidades (você pode ficar parecido com outra raça, mas não ganhará as habilidades dela), nem modifica o equipamento (uma espada longa disfarçada de bordão continua funcionando e causando dano como uma espada).",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "Você"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": "Vontade desacredita"
+      }
+    ],
+    "imagem": "assets/art/disfarce-ilusorio.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "escuridao",
+    "tipo": "pocao",
+    "titulo": "Escuridão",
+    "subtitulo": "Óleo",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "O alvo emana sombras em uma área com 6m de raio. Criaturas dentro da área recebem camuflagem leve por escuridão leve. As sombras não podem ser iluminadas por nenhuma fonte de luz natural. O objeto pode ser guardado (em um bolso, por exemplo) para interromper a escuridão, que voltará a funcionar caso o objeto seja revelado. Se lançar a magia num objeto de uma criatura involuntária, ela tem direito a um teste de Vontade para anulá-la. Escuridão anula Luz.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 objeto"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": "Vontade anula"
+      }
+    ],
+    "imagem": "assets/art/escuridao.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "luz",
+    "tipo": "pocao",
+    "titulo": "Luz",
+    "subtitulo": "Óleo",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "O alvo emite luz (mas não produz calor) em uma área com 6m de raio. O objeto pode ser guardado (em um bolso, por exemplo) para interromper a luz, que voltará a funcionar caso o objeto seja revelado. Se lançar a magia num objeto de uma criatura involuntária, ela tem direito a um teste de Vontade para anulá-la. Luz anula Escuridão.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 objeto"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": "Vontade anula"
+      }
+    ],
+    "imagem": "assets/art/luz.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "nevoa",
+    "tipo": "pocao",
+    "titulo": "Névoa",
+    "subtitulo": "Granada",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Uma névoa espessa eleva-se de um ponto a sua escolha, obscurecendo toda a visão — criaturas a até 1,5m têm camuflagem leve e criaturas a partir de 3m têm camuflagem total. Um vento forte dispersa a névoa em 4 rodadas e um vendaval a dispersa em 1 rodada. Esta magia não funciona sob a água.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "Até 6m"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/nevoa.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "primor-atletico",
+    "tipo": "pocao",
+    "titulo": "Primor Atlético",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Essa poção modifica os limites físicos do alvo, que recebe deslocamento +9m e +10 em testes de Atletismo.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 criatura"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/primor-atletico.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "protecao-divina",
+    "tipo": "pocao",
+    "titulo": "Proteção Divina",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Esta magia cria uma barreira mística invisível que fornece ao alvo +2 em testes de resistência.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 criatura"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/protecao-divina.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "resistencia-a-energia",
+    "tipo": "pocao",
+    "titulo": "Resistência a Energia",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Ao beber esta poção, escolha entre ácido, eletricidade, fogo, frio, luz ou trevas. O alvo recebe redução de dano 10 contra o tipo de dano escolhido.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 criatura"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/resistencia-a-energia.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "sono",
+    "tipo": "pocao",
+    "titulo": "Sono",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Um cansaço místico recai sobre o alvo. Se falhar na resistência, ele fica inconsciente e caído ou, se estiver envolvido em combate ou outra situação perigosa, fica exausto por 1 rodada, depois fatigado. Em ambos os casos, se passar, o alvo fica fatigado por 1d4 rodadas.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 criatura"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": "Vontade parcial"
+      }
+    ],
+    "imagem": "assets/art/sono.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "suporte-ambiental",
+    "tipo": "pocao",
+    "titulo": "Suporte Ambiental",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Esta poção facilita a sobrevivência em ambientes hostis. O alvo fica imune aos efeitos de calor e frio extremos, pode respirar na água se respirar ar (ou vice-versa) e não sufoca em fumaça densa.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "1 dia"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 criatura"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/suporte-ambiental.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "tranca-arcana",
+    "tipo": "pocao",
+    "titulo": "Tranca Arcana",
+    "subtitulo": "Óleo",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Esta poção tranca uma porta ou outro item que possa ser aberto ou fechado (como um baú, caixa etc.), aumentando a CD de testes de Força ou Ladinagem para abri-lo em +10. Você pode abrir livremente sua própria tranca sem problemas.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Permanente"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "1 objeto grande ou menor"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/tranca-arcana.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "visao-mistica",
+    "tipo": "pocao",
+    "titulo": "Visão Mística",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Seus olhos brilham com uma luz azul e passam a enxergar auras mágicas. Este efeito é similar ao uso de Misticismo para detectar magia, mas você detecta todas as auras mágicas em alcance médio e recebe todas as informações sobre elas sem gastar ações. Além disso, você pode gastar uma ação de movimento para descobrir se uma criatura que possa perceber em alcance médio é capaz de lançar magias e qual a aura gerada pelas magias de círculo mais alto que ela pode lançar.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Cena"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "Você"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/visao-mistica.png",
+    "_fonte": "Mestre (Cartas Rpg.md, 22/11/2026). Rodapé conferido com o livro."
+  },
+  {
+    "id": "vitalidade-fantasma",
+    "tipo": "pocao",
+    "titulo": "Vitalidade Fantasma",
+    "subtitulo": "Poção",
+    "circulo": 1,
+    "pm": 1,
+    "preco": "T$30",
+    "descricao": "Essa poção suga energia vital da terra e concede 2d10 pontos de vida temporários a quem a tomou. Os PV temporários desaparecem ao final da cena.",
+    "atributos": [
+      {
+        "rotulo": "Duração",
+        "valor": "Instantânea"
+      },
+      {
+        "rotulo": "Alvo/Área",
+        "valor": "Você"
+      },
+      {
+        "rotulo": "Resistência",
+        "valor": ""
+      }
+    ],
+    "imagem": "assets/art/vitalidade-fantasma.png",
+    "_fonte": "Claude, no padrão da mestre; efeito completo do livro (magia arcana de 1º círculo)."
+  }
+]
