@@ -124,33 +124,39 @@ export interface BoxMm {
 
 export const SLOTS = {
   /** Title band: only the flat part of the top scroll (its rolls' inner edges sit at ~10.6/62.2mm on both frames). */
-  title: { xMm: 11.5, yMm: 5, widthMm: 51, heightMm: 13 } as BoxMm,
+  // y: inside the scroll's painted top edge (6–6.9mm) and bottom edge (~18.6mm).
+  title: { xMm: 11.5, yMm: 6.8, widthMm: 51, heightMm: 11.5 } as BoxMm,
 
   /**
    * Item artwork window = the free space between the title scroll, the
-   * description scroll (its top edge is at 64.7mm), the left rail and the coin
-   * column (right edge 1mm clear of the coin). object-fit: contain centers the
-   * object in that space.
+   * description scroll, the left rail and the coin column (right edge 1mm clear
+   * of the coin). Top/bottom stop short of the title scroll's lower curl
+   * (~21mm) and the description scroll's corner roll (~62.8mm), so the corners
+   * never sit on painted rolls. object-fit: contain centers the object in it.
    */
-  art: { xMm: 6.5, yMm: 21, widthMm: 45.5, heightMm: 42.5 } as BoxMm,
+  art: { xMm: 6.5, yMm: 21.8, widthMm: 45.5, heightMm: 40.8 } as BoxMm,
 
   /**
    * Description band: the flat part of the tall bottom scroll (frame v2:
-   * scroll top edge 64.7mm, was 72.1mm — +7.4mm of text height).
+   * scroll top edge 64.7mm, was 72.1mm). Left edge clears the corner roll
+   * (painted down to ~75mm, inner edge 9.1mm on this side); right edge stays
+   * ~1mm inside the scroll's shaded side; bottom stays above the footer
+   * scroll's top edge (94.6mm).
    */
-  description: { xMm: 7, yMm: 66.6, widthMm: 60, heightMm: 27.8 } as BoxMm,
+  description: { xMm: 9.8, yMm: 66.6, widthMm: 57.4, heightMm: 27.2 } as BoxMm,
 
   /** Price coin: hangs below the title scroll into the open area, not glued to the top edge. */
-  price: { xMm: 53, yMm: 23.5, widthMm: 17, heightMm: 17 } as BoxMm,
+  // = the painted coin's disc (~53.6–68.6 × 24–39mm), not past it into the torn border.
+  price: { xMm: 53.6, yMm: 24, widthMm: 15, heightMm: 15 } as BoxMm,
 
   /**
    * Potion spell-circle seal: hangs right below the price coin, centered on
-   * the same vertical axis (price box center = 61.5mm), in the side rail the
+   * the same vertical axis (price box center = 61.1mm), in the side rail the
    * art window already leaves free for the coin (art ends at x=52mm, so this
    * never touches the art). The opposite rail is only ~11mm wide including
    * the torn border — a legible seal there would cut into the art window.
    */
-  circleSeal: { xMm: 56, yMm: 41.5, widthMm: 11, heightMm: 11 } as BoxMm,
+  circleSeal: { xMm: 55.6, yMm: 41.5, widthMm: 11, heightMm: 11 } as BoxMm,
 
   /**
    * Footer scroll below the description band: the flat band between the
@@ -158,7 +164,8 @@ export const SLOTS = {
    * three cells' horizontal spans come from FOOTER_CELLS_MM (per frame side),
    * because the dividers between them are painted in the frame art.
    */
-  footer: { xMm: 10.8, yMm: 93.4, widthMm: 53.3, heightMm: 9 } as BoxMm,
+  // y: between the footer scroll's painted top (94.6mm) and bottom (102.3mm) edges.
+  footer: { xMm: 10.8, yMm: 95.0, widthMm: 53.3, heightMm: 7.0 } as BoxMm,
 } as const;
 
 export interface BoxPx {
