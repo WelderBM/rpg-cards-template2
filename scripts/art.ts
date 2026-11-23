@@ -331,7 +331,9 @@ export async function cutOutBackground(
       tol: BG_TOLERANCE,
       softDist: SOFT_MAX_DIST,
       softSat: SOFT_MAX_SATURATION,
-      softDepth: SOFT_MAX_DEPTH_PX,
+      // The soft zone exists for potion smoke and mist. On weapons and armor it
+      // eats pale steel highlights and grey feathers touching the edge, so it is off there.
+      softDepth: opts.holes ? 0 : SOFT_MAX_DEPTH_PX,
       holeDist: HOLE_MAX_DIST,
       holeArea: opts.holes ? HOLE_MIN_AREA_FRACTION : 0,
       speckArea: SPECK_MIN_AREA_PX,
