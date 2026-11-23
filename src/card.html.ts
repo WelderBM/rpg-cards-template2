@@ -10,6 +10,7 @@ import {
   FOOTER_CELL_PADDING_PX,
   FOOTER_CELLS_MM,
   FOOTER_EMPTY_VALUE,
+  FOOTER_LABEL_TYPES,
   FRAME_PATHS,
   LINE_HEIGHT,
   PATHS,
@@ -80,6 +81,16 @@ function baseStyles(): string {
 }
 
 /** Resolve a card's footer attribute at `index`, filling gaps from the type default. */
+/**
+ * What a footer cell prints: "Rótulo: valor" for FOOTER_LABEL_TYPES, the bare
+ * value otherwise; a critical multiplier is typeset with "×" ("19x2" → "19×2"),
+ * as on the reference. Display only: the data keeps the plain "x".
+ */
+function footerText(card: Card, attr: { rotulo: string; valor: string }): string {
+  const value = attr.valor.replace(/(\d)\s*x\s*(\d)/gi, "$1×$2");
+  return FOOTER_LABEL_TYPES.includes(card.tipo) && attr.rotulo ? `${attr.rotulo}: ${value}` : value; // NBSP: "Carga: 1" never splits into 2 lines
+}
+
 function resolveFooterAttr(card: Card, index: number): { icone: string; rotulo: string; valor: string } {
   const given: CardAttribute | undefined = card.atributos[index];
   const fallback = TYPE_FOOTER_DEFAULTS[card.tipo][index];
@@ -108,7 +119,7 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
 
   // Fixed budget reserved for the two flourish glyphs flanking the subtitle,
   // so the subtitle's own fit-measurement wrapper has a real (non-shrink-wrap) width.
-  const subtitleFlourishBudgetPx = 40;
+  const subtitleFlourishBudgetPx = 0; // flourishes are ::before/::after of the text itself
   const subtitleTextWidthPx = titleBox.widthPx - TEXT_SAFE_PADDING_PX * 2 - subtitleFlourishBudgetPx * 2;
 
   const footerIconPx = 22;
@@ -129,7 +140,7 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     // autofit still enforces this ceiling (measureFit's maxWidthOverride).
     const textWidthPx = cell.widthPx - FOOTER_CELL_PADDING_PX * 2 - (iconUrl ? footerIconPx + footerGapPx : 0);
     const content = `${iconUrl ? `<img class="footer-icon" src="${iconUrl}" alt="" />` : ""}
-        <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}" data-max-width-px="${textWidthPx}">${escapeHtml(isEmpty ? FOOTER_EMPTY_VALUE : attr.valor)}</div>`;
+        <div id="footer-value-${i}" class="footer-pair" data-autofit="single" data-min="${FONTS.footerValue.minPx}" data-max="${FONTS.footerValue.maxPx}" data-max-width-px="${textWidthPx}">${escapeHtml(isEmpty ? FOOTER_EMPTY_VALUE : footerText(card, attr))}</div>`;
     return `
       <div class="slot footer-cell" style="left:${cell.leftPx}px; top:${cell.topPx}px; width:${cell.widthPx}px; height:${cell.heightPx}px;">
         ${content}
@@ -209,10 +220,20 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
     align-items: center;
     justify-content: center;
   }
-  .subtitle-flourish {
-    color: rgba(43, 26, 13, 0.55);
-    flex-shrink: 0;
+  /* Reference "——◆ ADAGA ◆——": a thin rule ending in a diamond, hugging the
+     word on both sides. Pseudo-elements in em, so they scale with the fitted
+     subtitle and count in its measured width (the autofit keeps them inside). */
+  .subtitle-text::before,
+  .subtitle-text::after {
+    content: "";
+    display: inline-block;
+    width: 3.2em;
+    height: 0.5em;
+    vertical-align: 0.18em;
+    background: no-repeat center / 100% 100% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 10'%3E%3Ccircle cx='2.5' cy='5' r='1.6' fill='%233a1f08' fill-opacity='.8'/%3E%3Cline x1='6' y1='5' x2='52' y2='5' stroke='%233a1f08' stroke-opacity='.8' stroke-width='1.4'/%3E%3Cpath d='M53 5 L58 1.6 L63 5 L58 8.4 Z' fill='none' stroke='%233a1f08' stroke-opacity='.8' stroke-width='1.3'/%3E%3C/svg%3E");
   }
+  .subtitle-text::before { margin-right: 0.55em; }
+  .subtitle-text::after { margin-left: 0.55em; transform: scaleX(-1); }
 
   .price-slot {
     left: ${priceBox.leftPx}px;
@@ -318,11 +339,9 @@ export function buildCardHtml(card: Card, side: CoinSide = "right"): string {
       card.subtitulo
         ? `
     <div class="subtitle-line">
-      <span class="subtitle-flourish">&#10022;</span>
       <div class="subtitle-text-box" style="width:${subtitleTextWidthPx}px;">
         <div id="subtitle-text" class="subtitle-text" data-autofit="single" data-min="${FONTS.subtitulo.minPx}" data-max="${FONTS.subtitulo.maxPx}">${escapeHtml(card.subtitulo)}</div>
       </div>
-      <span class="subtitle-flourish">&#10022;</span>
     </div>`
         : ""
     }

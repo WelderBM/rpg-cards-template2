@@ -298,14 +298,14 @@ export const FONTS = {
   title: {
     family: "Cinzel",
     file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
-    weight: 600,
+    weight: 800,
     minPx: 26,
-    maxPx: 56,
+    maxPx: 80,
   },
   subtitulo: {
     family: "Cinzel",
     file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
-    weight: 500,
+    weight: 600,
     minPx: 16,
     maxPx: 26,
   },
@@ -319,9 +319,9 @@ export const FONTS = {
   price: {
     family: "Cinzel",
     file: path.join(PATHS.fonts, "Cinzel-Variable.ttf"),
-    weight: 700,
+    weight: 800,
     minPx: 18,
-    maxPx: 34,
+    maxPx: 54,
   },
   circleSeal: {
     family: "Cinzel",
@@ -369,11 +369,21 @@ export interface FooterAttrDefault {
 // but `rotulo` stays here as self-documentation of what each position means
 // per type. Position 3 is always Peso: the price already has its own coin
 // slot, so repeating it in the footer would be redundant.
+/**
+ * Card types whose footer prints "Rótulo: valor" next to the icon, as on the
+ * approved reference ("Dano: 1d4 | Crítico: 19×2 | Carga: 1"). Potions stay
+ * value-only: their values are words ("Cena", "Vontade anula") that already
+ * say what they are, and labels would not fit the narrow 3rd compartment.
+ */
+// Off by default: on frame v2 the narrowest compartment (14.6mm) drags the
+// levelled weapon footer down to ~5-6pt with labels. Put "arma" here to turn them on.
+export const FOOTER_LABEL_TYPES: readonly CardType[] = [];
+
 export const TYPE_FOOTER_DEFAULTS: Record<CardType, FooterAttrDefault[]> = {
   arma: [
     { icone: "broadsword.svg", rotulo: "Dano" },
     { icone: "star-formation.svg", rotulo: "Crítico" },
-    { icone: "weight.svg", rotulo: "Peso" },
+    { icone: "weight.svg", rotulo: "Carga" },
   ],
   item: [
     { icone: "backpack.svg", rotulo: "Peso" },
@@ -384,7 +394,7 @@ export const TYPE_FOOTER_DEFAULTS: Record<CardType, FooterAttrDefault[]> = {
   // is the subtitle. No icon exists yet for Alvo/Área or Resistência, and an
   // empty Resistência ("") leaves its compartment blank.
   pocao: [
-    { icone: "hourglass.svg", rotulo: "Duração" },
+    { icone: "", rotulo: "Duração" },
     { icone: "", rotulo: "Alvo/Área" },
     { icone: "", rotulo: "Resistência" },
   ],
