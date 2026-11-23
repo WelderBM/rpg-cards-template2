@@ -58,10 +58,12 @@ const SOFT_MAX_DEPTH_PX = 24;
 const HOLE_MAX_DIST = 12;
 const HOLE_MIN_AREA_FRACTION = 0.0005; // 0.05% of the image (~520 px at 1024²)
 // Smaller closed specks (white between a net's ropes, inside chain links) are
-// background too when the ring 3 px around them is dark (seen through dark
-// material). A specular highlight fades out into a light ring, so it stays.
+// background too when the ring 3 px around them is really dark (seen through
+// dark material in shadow). A specular highlight sits on lit steel, whose ring
+// is mid-grey: measured on the 56 weapon/armor arts, eaten highlights had a
+// ring distance of 103-265 and true pockets 300-400, so the cut is 300.
 const SPECK_MIN_AREA_PX = 6;
-const SPECK_RING_MIN_DIST = 80;
+const SPECK_RING_MIN_DIST = 300;
 
 interface ArtPrompts {
   /** Default style (written for the potions). */
