@@ -57,6 +57,11 @@ const SOFT_MAX_DEPTH_PX = 24;
 // highlight could pass the test, and the 17 potions are already approved.
 const HOLE_MAX_DIST = 12;
 const HOLE_MIN_AREA_FRACTION = 0.0005; // 0.05% of the image (~520 px at 1024²)
+// Smaller closed specks (white between a net's ropes, inside chain links) are
+// background too when the ring 3 px around them is dark (seen through dark
+// material). A specular highlight fades out into a light ring, so it stays.
+const SPECK_MIN_AREA_PX = 6;
+const SPECK_RING_MIN_DIST = 80;
 
 interface ArtPrompts {
   /** Default style (written for the potions). */
@@ -136,7 +141,7 @@ export async function cutOutBackground(
   // exist in the page; a string is never transformed, so define it there.
   await page.evaluate("globalThis.__name = (fn) => fn");
   const dataUrl = await page.evaluate(
-    async ({ src, tol, softDist, softSat, softDepth, holeDist, holeArea }) => {
+    async ({ src, tol, softDist, softSat, softDepth, holeDist, holeArea, speckArea, speckRing }) => {
       const img = new Image();
       img.src = src;
       await img.decode();
@@ -205,7 +210,35 @@ export async function cutOutBackground(
               }
             }
           }
-          if (comp.length >= minArea) for (const k of comp) mark[k] = 1;
+          if (comp.length >= minArea) {
+            for (const k of comp) mark[k] = 1;
+          } else if (comp.length >= speckArea) {
+            // Ring 3 px out from the speck: mean distance from white.
+            const ringDepth = new Map<number, number>();
+            for (const k of comp) ringDepth.set(k, 0);
+            let frontier = comp.slice();
+            let sum = 0;
+            let count = 0;
+            for (let d = 1; d <= 3; d++) {
+              const next: number[] = [];
+              for (const k of frontier) {
+                const x = k % w;
+                const y = (k - x) / w;
+                for (const n of [x > 0 ? k - 1 : -1, x < w - 1 ? k + 1 : -1, y > 0 ? k - w : -1, y < h - 1 ? k + w : -1]) {
+                  if (n >= 0 && !ringDepth.has(n)) {
+                    ringDepth.set(n, d);
+                    next.push(n);
+                    if (d === 3) {
+                      sum += distFromWhite(n);
+                      count++;
+                    }
+                  }
+                }
+              }
+              frontier = next;
+            }
+            if (count > 0 && sum / count >= speckRing) for (const k of comp) mark[k] = 1;
+          }
         }
       }
       // Soft zone: grow from the background through light grey pixels, at most softDepth steps.
@@ -301,6 +334,8 @@ export async function cutOutBackground(
       softDepth: SOFT_MAX_DEPTH_PX,
       holeDist: HOLE_MAX_DIST,
       holeArea: opts.holes ? HOLE_MIN_AREA_FRACTION : 0,
+      speckArea: SPECK_MIN_AREA_PX,
+      speckRing: SPECK_RING_MIN_DIST,
     },
   );
   return Buffer.from(dataUrl.replace(/^data:image\/png;base64,/, ""), "base64");
